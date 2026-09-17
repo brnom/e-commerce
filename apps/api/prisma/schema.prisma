@@ -6,3 +6,29 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Category {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  name      String    @unique @db.Citext
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  products  Product[]
+}
+
+model Product {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  sku         String    @unique
+  name        String
+  description String?
+  price       Decimal   @db.Decimal(12, 2)
+  stock       Int
+  weightKg    Decimal?  @db.Decimal(8, 3)
+  categoryId  String?   @db.Uuid
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  deletedAt   DateTime? @db.Timestamptz()
+  createdAt   DateTime  @default(now()) @db.Timestamptz()
+  updatedAt   DateTime  @updatedAt @db.Timestamptz()
+
+  @@index([name(ops: raw("gin_trgm_ops")), description(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@index([categoryId])
+  @@index([deletedAt])
+}
