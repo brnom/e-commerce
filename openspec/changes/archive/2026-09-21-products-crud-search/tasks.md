@@ -34,6 +34,6 @@
 
 ## 6. CI, docs and final check
 
-- [ ] 6.1 Add a `postgres:16-alpine` service with a health check to the quality-gate job in `.github/workflows/ci.yml`, set `TEST_DATABASE_URL` for the test step; verify `actionlint` passes (via docker as in the scaffold) and the workflow is green on the pull request
+- [x] 6.1 Add a `postgres:16-alpine` service with a health check to the quality-gate job in `.github/workflows/ci.yml`, set `TEST_DATABASE_URL` for the test step; verify `actionlint` passes (via docker as in the scaffold) and the workflow is green on the pull request
 - [x] 6.2 Update `README.md`: "Run for development" notes the test database prerequisite, the env table gains `TEST_DATABASE_URL`, the Decisions section summarizes D1–D8 (citext categories, soft delete with reserved SKU, decimal-to-number, ILIKE + trigram over full-text, real-database integration tests), and the Status table marks `products-crud-search` in progress; verify `pnpm format:check` passes
 - [x] 6.3 Run `pnpm check` and `docker compose up --build` from a clean state; verify both succeed, that `http://localhost:3000/products` lists a product created through the form, and that the API container log shows the `product_catalog` migration applied before "Nest application successfully started"
