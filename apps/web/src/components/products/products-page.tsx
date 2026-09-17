@@ -1,12 +1,16 @@
 "use client";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 
 import { Pagination } from "./pagination";
 import { ProductFilters } from "./product-filters";
-import { ProductsTable } from "./products-table";
-import { toListParams } from "@/lib/product-list-params";
+import { ProductsTable, ProductsTableSkeleton } from "./products-table";
+import { EmptyState, ErrorState } from "./states";
+import { PageHeader } from "@/components/layout/page-header";
+import { Button } from "@/components/ui/button";
+import { defaultListState, toListParams } from "@/lib/product-list-params";
 import { listProducts, productKeys } from "@/lib/products-api";
 import { useProductListState } from "@/lib/use-product-list-state";
 
@@ -22,6 +26,7 @@ export function ProductsPage() {
     queryFn: () => listProducts(params),
     placeholderData: keepPreviousData,
   });
+  const filtered = state.q !== "" || state.category !== "";
 
   const toggleSort = (sort: ProductSortField) =>
     update({
@@ -32,16 +37,49 @@ export function ProductsPage() {
 
   return (
     <main>
-      <header className="page-header">
-        <h1>Products</h1>
-        <Link href="/products/new" className="button">
-          New product
-        </Link>
-      </header>
+      <PageHeader
+        title="Products"
+        eyebrow={
+          products.data
+            ? `${products.data.total} ${products.data.total === 1 ? "product" : "products"}`
+            : "Catalog"
+        }
+        actions={
+          <Button asChild>
+            <Link href="/products/new">
+              <Plus />
+              New product
+            </Link>
+          </Button>
+        }
+      />
       <ProductFilters state={state} onChange={update} />
-      {products.isError && <p role="alert">Could not load products.</p>}
-      {products.isPending && <p>Loading…</p>}
-      {products.data && (
+      {products.isPending && <ProductsTableSkeleton />}
+      {products.isError && (
+        <ErrorState message="Could not load products." onRetry={() => products.refetch()} />
+      )}
+      {products.data && products.data.items.length === 0 && (
+        <EmptyState
+          title={filtered ? "No products match" : "No products yet"}
+          description={
+            filtered
+              ? "Try another search term or category."
+              : "Create the first product to start the catalog."
+          }
+          action={
+            filtered ? (
+              <Button variant="outline" onClick={() => update(defaultListState)}>
+                Clear filters
+              </Button>
+            ) : (
+              <Button asChild>
+                <Link href="/products/new">New product</Link>
+              </Button>
+            )
+          }
+        />
+      )}
+      {products.data && products.data.items.length > 0 && (
         <>
           <ProductsTable items={products.data.items} state={state} onSort={toggleSort} />
           <Pagination

@@ -9,8 +9,10 @@ import { calls, renderWithQuery, stubApi } from "@/test-utils";
 import type { ProductResponse } from "@ecommerce/shared";
 
 vi.mock("next/link", () => ({
-  default: ({ href, children }: { href: string; children: React.ReactNode }) => (
-    <a href={href}>{children}</a>
+  default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
   ),
 }));
 
@@ -28,6 +30,9 @@ const product = (overrides: Partial<ProductResponse>): ProductResponse => ({
   ...overrides,
 });
 
+const renderTable = (items: ProductResponse[], onSort = vi.fn()) =>
+  renderWithQuery(<ProductsTable items={items} state={defaultListState} onSort={onSort} />);
+
 describe("ProductsTable", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -36,39 +41,59 @@ describe("ProductsTable", () => {
   it("renders markup in product fields as literal text", () => {
     stubApi([]);
     const name = "<script>alert('xss')</script>";
-    renderWithQuery(
-      <ProductsTable items={[product({ name })]} state={defaultListState} onSort={vi.fn()} />,
-    );
+    renderTable([product({ name })]);
 
-    expect(screen.getByRole("cell", { name })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name })).toBeInTheDocument();
     expect(document.querySelector("script")).toBeNull();
   });
 
-  it("requires confirmation before deleting and sends nothing when cancelled", async () => {
-    const fetchMock = stubApi([{ method: "DELETE", path: /\/products\//, status: 204 }]);
-    renderWithQuery(
-      <ProductsTable items={[product({})]} state={defaultListState} onSort={vi.fn()} />,
+  it("links the product name to its detail page", () => {
+    stubApi([]);
+    renderTable([product({})]);
+
+    expect(screen.getByRole("link", { name: "Running Shoes" })).toHaveAttribute(
+      "href",
+      "/products/01a0c40d-90c3-750a-af78-7d4aa60d284e",
     );
+  });
+
+  it("opens a confirmation dialog and sends nothing when cancelled", async () => {
+    const fetchMock = stubApi([{ method: "DELETE", path: /\/products\//, status: 204 }]);
+    renderTable([product({})]);
     const user = userEvent.setup();
 
     await user.click(screen.getByRole("button", { name: "Delete Running Shoes" }));
-    const confirmation = screen.getByRole("group", { name: "Confirm deleting Running Shoes" });
-    await user.click(within(confirmation).getByRole("button", { name: "Cancel" }));
+    const dialog = await screen.findByRole("alertdialog", { name: "Delete product?" });
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
 
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     expect(calls(fetchMock, "DELETE")).toHaveLength(0);
-    expect(screen.getByRole("cell", { name: "Running Shoes" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Delete Running Shoes" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Running Shoes" })).toBeInTheDocument();
+  });
+
+  it("closes the dialog on Escape and returns focus to the trigger", async () => {
+    const fetchMock = stubApi([{ method: "DELETE", path: /\/products\//, status: 204 }]);
+    renderTable([product({})]);
+    const user = userEvent.setup();
+    const trigger = screen.getByRole("button", { name: "Delete Running Shoes" });
+
+    await user.click(trigger);
+    await screen.findByRole("alertdialog");
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(calls(fetchMock, "DELETE")).toHaveLength(0);
+    expect(trigger).toHaveFocus();
   });
 
   it("sends the delete request once confirmed", async () => {
     const fetchMock = stubApi([{ method: "DELETE", path: /\/products\//, status: 204 }]);
-    renderWithQuery(
-      <ProductsTable items={[product({})]} state={defaultListState} onSort={vi.fn()} />,
-    );
+    renderTable([product({})]);
     const user = userEvent.setup();
 
     await user.click(screen.getByRole("button", { name: "Delete Running Shoes" }));
-    await user.click(screen.getByRole("button", { name: "Confirm" }));
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: "Delete" }));
 
     await vi.waitFor(() => expect(calls(fetchMock, "DELETE")).toHaveLength(1));
     expect(calls(fetchMock, "DELETE")[0]?.[0]).toMatch(
