@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 
+import { upsertCategory } from './category-upsert'
 import { PrismaService } from './prisma.service'
 
 import type { CategoryRepository } from '@/application/ports/category-repository'
@@ -10,12 +11,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   findOrCreate(name: string): Promise<Category> {
-    return this.prisma.category.upsert({
-      where: { name },
-      create: { name },
-      update: {},
-      select: { id: true, name: true },
-    })
+    return upsertCategory(this.prisma, name)
   }
 
   findAll(): Promise<Category[]> {

@@ -6,5 +6,5 @@ export function createTestPrisma(): PrismaService {
 }
 
 export async function resetDatabase(prisma: PrismaService): Promise<void> {
-  await prisma.$executeRawUnsafe('TRUNCATE TABLE "Product", "Category" CASCADE')
+  await prisma.$executeRawUnsafe('TRUNCATE TABLE "Product", "Category", "ImportJob" CASCADE')
 }
