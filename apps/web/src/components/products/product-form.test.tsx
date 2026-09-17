@@ -54,6 +54,24 @@ describe('ProductForm', () => {
     )
   })
 
+  it('keeps an absent weight empty instead of turning it into zero', async () => {
+    stubApi([{ path: /\/categories$/, body: [] }])
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+    renderWithQuery(
+      <ProductForm
+        submitLabel="Save"
+        onSubmit={onSubmit}
+        defaultValues={{ sku: 'GK-088', name: 'Gift Card', price: 25, stock: 10, weightKg: null }}
+      />,
+    )
+
+    expect(screen.getByLabelText('Weight (kg)')).toHaveValue(null)
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Save' }))
+
+    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalled())
+    expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({ weightKg: null, price: 25, stock: 10 })
+  })
+
   it('offers existing categories as suggestions', async () => {
     stubApi([{ path: /\/categories$/, body: [{ id: 'c1', name: 'Footwear' }] }])
     renderWithQuery(<ProductForm submitLabel="Create" onSubmit={vi.fn()} />)

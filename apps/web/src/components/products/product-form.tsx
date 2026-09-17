@@ -43,9 +43,12 @@ const isFieldName = (path: string): path is FieldPath<ProductFormValues> => fiel
 type ValidationBody = { issues?: Array<{ path: string; message: string }> }
 type ConflictBody = { field?: string; message?: string }
 
-const emptyToNull = (value: string) => (value.trim() === '' ? null : value)
-const numberOrUndefined = (value: string) => (value === '' ? undefined : Number(value))
-const numberOrNull = (value: string) => (value === '' ? null : Number(value))
+const emptyToNull = (value: unknown) =>
+  typeof value === 'string' && value.trim() !== '' ? value : null
+const numberOrUndefined = (value: unknown) =>
+  typeof value === 'number' ? value : value === '' || value == null ? undefined : Number(value)
+const numberOrNull = (value: unknown) =>
+  typeof value === 'number' ? value : value === '' || value == null ? null : Number(value)
 
 export function ProductForm({ defaultValues, submitLabel, onSubmit }: Props) {
   const categories = useCategories()
