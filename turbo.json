@@ -22,6 +22,9 @@
     "lint": {
       "dependsOn": ["^build", "db:generate"]
     },
+    "lint:fix": {
+      "dependsOn": ["^build", "db:generate"]
+    },
     "typecheck": {
       "dependsOn": ["^build", "db:generate"]
     },
