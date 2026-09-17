@@ -77,6 +77,13 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       ...nextPlugin.configs.recommended.rules,
       "@next/next/no-html-link-for-pages": "off",
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "JSXAttribute[name.name='dangerouslySetInnerHTML']",
+          message: "Render product data as text; dangerouslySetInnerHTML is not allowed.",
+        },
+      ],
     },
   },
   prettier,
