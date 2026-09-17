@@ -28,3 +28,25 @@ export type {
   UpdateProduct,
   UpdateProductInput,
 } from './product/product.schema'
+export {
+  importColumns,
+  importIssueSchema,
+  importJobSchema,
+  importJobSummarySchema,
+  importOutcomes,
+  importRowReportSchema,
+  importRowSchema,
+  importTotalsSchema,
+  requiredImportColumns,
+} from './import/import.schema'
+export type {
+  ImportCells,
+  ImportColumn,
+  ImportIssue,
+  ImportJob,
+  ImportJobSummary,
+  ImportOutcome,
+  ImportRow,
+  ImportRowReport,
+  ImportTotals,
+} from './import/import.schema'
