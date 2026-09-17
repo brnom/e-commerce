@@ -1,3 +1,5 @@
+import "./globals.css";
+
 import { QueryProvider } from "@/components/query-provider";
 
 import type { Metadata } from "next";
