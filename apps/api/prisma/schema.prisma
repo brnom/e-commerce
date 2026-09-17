@@ -32,3 +32,17 @@ model Product {
   @@index([categoryId])
   @@index([deletedAt])
 }
+
+model ImportJob {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  fileName     String
+  totalRows    Int
+  createdCount Int
+  updatedCount Int
+  skippedCount Int
+  failedCount  Int
+  rows         Json
+  createdAt    DateTime @default(now()) @db.Timestamptz()
+
+  @@index([createdAt])
+}
