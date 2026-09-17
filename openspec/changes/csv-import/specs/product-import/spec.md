@@ -103,11 +103,11 @@ Every accepted file SHALL be recorded as an import job with a generated `id`, th
 - **THEN** the response is `404`
 
 ### Requirement: Import user interface
-The web application SHALL provide an imports page where a user chooses a `.csv` file and starts the import, sees the import history with each job's file name, date and totals, and can open any job's report. After an upload completes the report page for that job SHALL open, showing the totals and a table with every row's line number, SKU, name, outcome and issues, with a control to show only rows that were not imported. A rejected file SHALL show the API's message on the imports page. The products list SHALL reflect the imported products the next time it is shown.
+The web application SHALL provide an imports page where a user chooses a `.csv` file and starts the import, sees the import history with each job's short code (the last eight characters of its `id`, upper-cased, so two imports of the same file can be told apart), file name, date and totals, and can open any job's report. After an upload completes the report page for that job SHALL open, showing the totals and a table with every row's line number, SKU, name, outcome and issues, with a control to show only rows that were not imported. A rejected file SHALL show the API's message on the imports page. The products list SHALL reflect the imported products the next time it is shown.
 
 #### Scenario: Upload leads to the report
 - **WHEN** a user picks a CSV file on the imports page and starts the import
-- **THEN** the report page for the new job opens, showing its totals and one line per row of the file
+- **THEN** the report page for the new job opens, showing its short code, its totals and one line per row of the file
 
 #### Scenario: Problem rows can be isolated
 - **WHEN** a user enables the problems-only control on a report page

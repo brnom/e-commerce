@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { formatDateTime } from '@/lib/format'
+import { formatDateTime, formatShortId } from '@/lib/format'
 import { importKeys, listImports } from '@/lib/imports-api'
 
 const SKELETON_ROWS = 3
@@ -52,6 +52,7 @@ export function ImportHistory() {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="font-mono text-xs tracking-wider uppercase">Import</TableHead>
             <TableHead className="font-mono text-xs tracking-wider uppercase">File</TableHead>
             <TableHead className="font-mono text-xs tracking-wider uppercase">Imported</TableHead>
             {counters.map((entry) => (
@@ -67,6 +68,9 @@ export function ImportHistory() {
         <TableBody>
           {jobs.data.map((job) => (
             <TableRow key={job.id}>
+              <TableCell className="font-mono text-muted-foreground">
+                {formatShortId(job.id)}
+              </TableCell>
               <TableCell className="font-medium">
                 <Link href={`/imports/${job.id}`} className="underline-offset-4 hover:underline">
                   {job.fileName}

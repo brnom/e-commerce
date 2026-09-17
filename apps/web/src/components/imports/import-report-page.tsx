@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { formatDateTime } from '@/lib/format'
+import { formatDateTime, formatShortId } from '@/lib/format'
 import { getImport, importKeys } from '@/lib/imports-api'
 
 import type { ImportRowReport } from '@ecommerce/shared'
@@ -106,7 +106,7 @@ export function ImportReportPage({ importId }: { readonly importId: string }) {
     <main>
       <Breadcrumb
         items={[{ href: '/imports', label: 'Imports' }]}
-        current={job.data?.fileName ?? 'Import'}
+        current={job.data ? `${formatShortId(job.data.id)} ${job.data.fileName}` : 'Import'}
       />
       {job.isPending && (
         <div className="space-y-6" aria-busy="true" aria-label="Loading import">
@@ -122,7 +122,7 @@ export function ImportReportPage({ importId }: { readonly importId: string }) {
         <article className="flex flex-col gap-8">
           <div className="flex flex-col gap-3">
             <p className="font-mono text-xs tracking-wider text-muted-foreground uppercase">
-              Imported {formatDateTime(job.data.createdAt)}
+              {formatShortId(job.data.id)} · Imported {formatDateTime(job.data.createdAt)}
             </p>
             <h1 className="display-heading text-4xl leading-none wrap-anywhere sm:text-6xl">
               {job.data.fileName}
