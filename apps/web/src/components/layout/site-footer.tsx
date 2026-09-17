@@ -6,5 +6,5 @@ export function SiteFooter() {
         <span>Catalog · Import · Orders</span>
       </div>
     </footer>
-  );
+  )
 }

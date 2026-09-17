@@ -1,5 +1,5 @@
-import type { Product } from "@/domain/product/product";
-import type { Prisma } from "@/generated/prisma/client";
+import type { Product } from '@/domain/product/product'
+import type { Prisma } from '@/generated/prisma/client'
 
 export const productSelect = {
   id: true,
@@ -12,9 +12,9 @@ export const productSelect = {
   category: { select: { id: true, name: true } },
   createdAt: true,
   updatedAt: true,
-} satisfies Prisma.ProductSelect;
+} satisfies Prisma.ProductSelect
 
-type ProductRow = Prisma.ProductGetPayload<{ select: typeof productSelect }>;
+type ProductRow = Prisma.ProductGetPayload<{ select: typeof productSelect }>
 
 export function toProduct(row: ProductRow): Product {
   return {
@@ -28,5 +28,5 @@ export function toProduct(row: ProductRow): Product {
     category: row.category,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-  };
+  }
 }

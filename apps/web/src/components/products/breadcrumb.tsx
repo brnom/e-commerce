@@ -1,10 +1,10 @@
-import { ChevronRight } from "lucide-react";
-import Link from "next/link";
-import { Fragment } from "react";
+import { ChevronRight } from 'lucide-react'
+import Link from 'next/link'
+import { Fragment } from 'react'
 
 interface Props {
-  readonly items: ReadonlyArray<{ href: string; label: string }>;
-  readonly current: string;
+  readonly items: ReadonlyArray<{ href: string; label: string }>
+  readonly current: string
 }
 
 export function Breadcrumb({ items, current }: Props) {
@@ -28,5 +28,5 @@ export function Breadcrumb({ items, current }: Props) {
         {current}
       </span>
     </nav>
-  );
+  )
 }

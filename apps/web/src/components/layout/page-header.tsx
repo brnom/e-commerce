@@ -1,10 +1,10 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react'
 
 interface Props {
-  readonly title: string;
-  readonly eyebrow?: ReactNode;
-  readonly actions?: ReactNode;
-  readonly children?: ReactNode;
+  readonly title: string
+  readonly eyebrow?: ReactNode
+  readonly actions?: ReactNode
+  readonly children?: ReactNode
 }
 
 export function PageHeader({ title, eyebrow, actions, children }: Props) {
@@ -21,5 +21,5 @@ export function PageHeader({ title, eyebrow, actions, children }: Props) {
       </div>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
     </div>
-  );
+  )
 }

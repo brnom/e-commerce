@@ -1,15 +1,15 @@
-const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
-const dateTime = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" });
+const dateTime = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' })
 
 export function formatMoney(value: number): string {
-  return money.format(value);
+  return money.format(value)
 }
 
 export function formatDateTime(iso: string): string {
-  return dateTime.format(new Date(iso));
+  return dateTime.format(new Date(iso))
 }
 
 export function formatWeight(kg: number | null): string {
-  return kg === null ? "—" : `${kg} kg`;
+  return kg === null ? '—' : `${kg} kg`
 }
