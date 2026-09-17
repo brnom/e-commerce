@@ -2,7 +2,10 @@ import Link from 'next/link'
 
 import { ApiHealth } from '@/components/api-health'
 
-const links = [{ href: '/products', label: 'Products' }]
+const links = [
+  { href: '/products', label: 'Products' },
+  { href: '/imports', label: 'Imports' },
+]
 
 export function SiteHeader() {
   return (
