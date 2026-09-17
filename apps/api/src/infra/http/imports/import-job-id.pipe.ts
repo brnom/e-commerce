@@ -3,8 +3,8 @@ import { Injectable } from '@nestjs/common'
 import { ResourceIdPipe } from '../resource-id.pipe'
 
 @Injectable()
-export class ProductIdPipe extends ResourceIdPipe {
+export class ImportJobIdPipe extends ResourceIdPipe {
   constructor() {
-    super('product')
+    super('import')
   }
 }
