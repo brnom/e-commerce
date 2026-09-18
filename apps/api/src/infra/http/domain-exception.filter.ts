@@ -5,14 +5,25 @@ import {
   DomainValidationError,
   InvalidImportFileError,
   NotFoundError,
+  UnavailableItemsError,
 } from '@/domain/shared/domain-error'
 
 import type { Response } from 'express'
 
 type DomainException =
-  DomainValidationError | NotFoundError | ConflictError | InvalidImportFileError
+  | DomainValidationError
+  | NotFoundError
+  | ConflictError
+  | InvalidImportFileError
+  | UnavailableItemsError
 
-@Catch(DomainValidationError, NotFoundError, ConflictError, InvalidImportFileError)
+@Catch(
+  DomainValidationError,
+  NotFoundError,
+  ConflictError,
+  InvalidImportFileError,
+  UnavailableItemsError,
+)
 export class DomainExceptionFilter implements ExceptionFilter {
   catch(exception: DomainException, host: ArgumentsHost): void {
     const response = host.switchToHttp().getResponse<Response>()
@@ -24,6 +35,10 @@ export class DomainExceptionFilter implements ExceptionFilter {
       response
         .status(409)
         .json({ message: exception.message, field: exception.field, value: exception.value })
+      return
+    }
+    if (exception instanceof UnavailableItemsError) {
+      response.status(409).json({ message: exception.message, items: exception.items })
       return
     }
     if (exception instanceof InvalidImportFileError) {

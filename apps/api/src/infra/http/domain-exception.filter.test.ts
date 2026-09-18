@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import { DomainExceptionFilter } from './domain-exception.filter'
-import { ConflictError, DomainValidationError, NotFoundError } from '@/domain/shared/domain-error'
+import {
+  ConflictError,
+  DomainValidationError,
+  NotFoundError,
+  UnavailableItemsError,
+} from '@/domain/shared/domain-error'
 
 import type { ArgumentsHost } from '@nestjs/common'
 
@@ -42,6 +47,22 @@ describe('DomainExceptionFilter', () => {
       message: 'sku "RS-001" is already taken',
       field: 'sku',
       value: 'RS-001',
+    })
+  })
+
+  it('maps UnavailableItemsError to 409 listing every item', () => {
+    const { host, sent } = fakeHost()
+    const items = [
+      { productId: 'p1', requested: 3, available: 1, reason: 'insufficient_stock' as const },
+      { productId: 'p2', requested: 1, available: 0, reason: 'unavailable' as const },
+    ]
+
+    filter.catch(new UnavailableItemsError(items), host)
+
+    expect(sent.status).toBe(409)
+    expect(sent.body).toEqual({
+      message: 'Some items are not available in the requested quantity',
+      items,
     })
   })
 
