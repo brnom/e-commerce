@@ -1,3 +1,5 @@
+import type { UnavailableItem } from '@ecommerce/shared'
+
 export class DomainValidationError extends Error {
   constructor(
     readonly field: string,
@@ -25,6 +27,13 @@ export class ConflictError extends Error {
   ) {
     super(`${field} ${JSON.stringify(value)} is already taken`)
     this.name = 'ConflictError'
+  }
+}
+
+export class UnavailableItemsError extends Error {
+  constructor(readonly items: readonly UnavailableItem[]) {
+    super('Some items are not available in the requested quantity')
+    this.name = 'UnavailableItemsError'
   }
 }
 
