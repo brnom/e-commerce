@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+**/.next
+**/coverage
+**/.turbo
+**/src/generated
+.git
+.env
+.env.*
+!.env.example
+openspec
+.claude
+*.pdf
+*.csv
