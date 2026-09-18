@@ -5,11 +5,12 @@ import { ConfigModule } from './infra/config/config.module'
 import { DomainExceptionFilter } from './infra/http/domain-exception.filter'
 import { HealthModule } from './infra/http/health/health.module'
 import { ImportsModule } from './infra/http/imports/imports.module'
+import { OrdersModule } from './infra/http/orders/orders.module'
 import { ProductsModule } from './infra/http/products/products.module'
 import { PrismaModule } from './infra/persistence/prisma/prisma.module'
 
 @Module({
-  imports: [ConfigModule, PrismaModule, HealthModule, ProductsModule, ImportsModule],
+  imports: [ConfigModule, PrismaModule, HealthModule, ProductsModule, ImportsModule, OrdersModule],
   providers: [{ provide: APP_FILTER, useClass: DomainExceptionFilter }],
 })
 export class AppModule {}
