@@ -1,15 +1,15 @@
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button'
 
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react'
 
 export function EmptyState({
   title,
   description,
   action,
 }: {
-  readonly title: string;
-  readonly description: string;
-  readonly action?: ReactNode;
+  readonly title: string
+  readonly description: string
+  readonly action?: ReactNode
 }) {
   return (
     <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed px-6 py-16 text-center">
@@ -17,15 +17,15 @@ export function EmptyState({
       <p className="max-w-sm text-muted-foreground">{description}</p>
       {action}
     </div>
-  );
+  )
 }
 
 export function ErrorState({
   message,
   onRetry,
 }: {
-  readonly message: string;
-  readonly onRetry: () => void;
+  readonly message: string
+  readonly onRetry: () => void
 }) {
   return (
     <div
@@ -38,7 +38,7 @@ export function ErrorState({
         Retry
       </Button>
     </div>
-  );
+  )
 }
 
 export function NotFoundState({
@@ -46,9 +46,9 @@ export function NotFoundState({
   description,
   action,
 }: {
-  readonly title: string;
-  readonly description: string;
-  readonly action: ReactNode;
+  readonly title: string
+  readonly description: string
+  readonly action: ReactNode
 }) {
   return (
     <div className="flex flex-col items-start gap-4 py-10">
@@ -57,5 +57,5 @@ export function NotFoundState({
       <p className="max-w-md text-muted-foreground">{description}</p>
       {action}
     </div>
-  );
+  )
 }

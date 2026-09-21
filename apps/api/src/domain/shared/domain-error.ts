@@ -3,8 +3,8 @@ export class DomainValidationError extends Error {
     readonly field: string,
     message: string,
   ) {
-    super(message);
-    this.name = "DomainValidationError";
+    super(message)
+    this.name = 'DomainValidationError'
   }
 }
 
@@ -13,8 +13,8 @@ export class NotFoundError extends Error {
     readonly resource: string,
     readonly id: string,
   ) {
-    super(`No ${resource} with id ${JSON.stringify(id)}`);
-    this.name = "NotFoundError";
+    super(`No ${resource} with id ${JSON.stringify(id)}`)
+    this.name = 'NotFoundError'
   }
 }
 
@@ -23,7 +23,7 @@ export class ConflictError extends Error {
     readonly field: string,
     readonly value: string,
   ) {
-    super(`${field} ${JSON.stringify(value)} is already taken`);
-    this.name = "ConflictError";
+    super(`${field} ${JSON.stringify(value)} is already taken`)
+    this.name = 'ConflictError'
   }
 }

@@ -1,13 +1,13 @@
-"use client";
+'use client'
 
-import { createProductSchema, type CreateProductInput } from "@ecommerce/shared";
-import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
-import { useForm, type FieldPath } from "react-hook-form";
+import { createProductSchema, type CreateProductInput } from '@ecommerce/shared'
+import { zodResolver } from '@hookform/resolvers/zod'
+import Link from 'next/link'
+import { useForm, type FieldPath } from 'react-hook-form'
 
-import { useCategories } from "./use-categories";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { useCategories } from './use-categories'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import {
   Form,
   FormControl,
@@ -15,74 +15,74 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { ApiError } from "@/lib/api-client";
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { ApiError } from '@/lib/api-client'
 
-export type ProductFormValues = CreateProductInput;
+export type ProductFormValues = CreateProductInput
 
 interface Props {
-  readonly defaultValues?: Partial<ProductFormValues>;
-  readonly submitLabel: string;
-  readonly onSubmit: (values: ProductFormValues) => Promise<unknown>;
+  readonly defaultValues?: Partial<ProductFormValues>
+  readonly submitLabel: string
+  readonly onSubmit: (values: ProductFormValues) => Promise<unknown>
 }
 
 const fieldNames: ReadonlySet<string> = new Set([
-  "sku",
-  "name",
-  "description",
-  "price",
-  "stock",
-  "weightKg",
-  "category",
-]);
+  'sku',
+  'name',
+  'description',
+  'price',
+  'stock',
+  'weightKg',
+  'category',
+])
 
-const isFieldName = (path: string): path is FieldPath<ProductFormValues> => fieldNames.has(path);
+const isFieldName = (path: string): path is FieldPath<ProductFormValues> => fieldNames.has(path)
 
-type ValidationBody = { issues?: Array<{ path: string; message: string }> };
-type ConflictBody = { field?: string; message?: string };
+type ValidationBody = { issues?: Array<{ path: string; message: string }> }
+type ConflictBody = { field?: string; message?: string }
 
-const emptyToNull = (value: string) => (value.trim() === "" ? null : value);
-const numberOrUndefined = (value: string) => (value === "" ? undefined : Number(value));
-const numberOrNull = (value: string) => (value === "" ? null : Number(value));
+const emptyToNull = (value: string) => (value.trim() === '' ? null : value)
+const numberOrUndefined = (value: string) => (value === '' ? undefined : Number(value))
+const numberOrNull = (value: string) => (value === '' ? null : Number(value))
 
 export function ProductForm({ defaultValues, submitLabel, onSubmit }: Props) {
-  const categories = useCategories();
+  const categories = useCategories()
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(createProductSchema),
-    defaultValues: { description: "", category: "", ...defaultValues },
-  });
-  const { errors, isSubmitting } = form.formState;
+    defaultValues: { description: '', category: '', ...defaultValues },
+  })
+  const { errors, isSubmitting } = form.formState
 
   const submit = form.handleSubmit(async (values) => {
     try {
-      await onSubmit(values);
+      await onSubmit(values)
     } catch (error) {
       if (!applyApiError(error)) {
-        form.setError("root", { message: "The product could not be saved. Try again." });
+        form.setError('root', { message: 'The product could not be saved. Try again.' })
       }
     }
-  });
+  })
 
   function applyApiError(error: unknown): boolean {
-    if (!(error instanceof ApiError)) return false;
+    if (!(error instanceof ApiError)) return false
     if (error.status === 400) {
-      const issues = (error.body as ValidationBody).issues ?? [];
-      const fieldIssues = issues.filter((issue) => isFieldName(issue.path));
+      const issues = (error.body as ValidationBody).issues ?? []
+      const fieldIssues = issues.filter((issue) => isFieldName(issue.path))
       for (const issue of fieldIssues) {
-        if (isFieldName(issue.path)) form.setError(issue.path, { message: issue.message });
+        if (isFieldName(issue.path)) form.setError(issue.path, { message: issue.message })
       }
-      return fieldIssues.length > 0;
+      return fieldIssues.length > 0
     }
     if (error.status === 409) {
-      const { field, message } = error.body as ConflictBody;
+      const { field, message } = error.body as ConflictBody
       if (field && isFieldName(field)) {
-        form.setError(field, { message: message ?? "Already taken" });
-        return true;
+        form.setError(field, { message: message ?? 'Already taken' })
+        return true
       }
     }
-    return false;
+    return false
   }
 
   return (
@@ -127,7 +127,7 @@ export function ProductForm({ defaultValues, submitLabel, onSubmit }: Props) {
                   <FormControl>
                     <Textarea
                       rows={3}
-                      {...form.register("description", { setValueAs: emptyToNull })}
+                      {...form.register('description', { setValueAs: emptyToNull })}
                     />
                   </FormControl>
                   <FormMessage />
@@ -147,7 +147,7 @@ export function ProductForm({ defaultValues, submitLabel, onSubmit }: Props) {
                         step="0.01"
                         min="0"
                         className="font-mono"
-                        {...form.register("price", { setValueAs: numberOrUndefined })}
+                        {...form.register('price', { setValueAs: numberOrUndefined })}
                       />
                     </FormControl>
                     <FormMessage />
@@ -166,7 +166,7 @@ export function ProductForm({ defaultValues, submitLabel, onSubmit }: Props) {
                         step="1"
                         min="0"
                         className="font-mono"
-                        {...form.register("stock", { setValueAs: numberOrUndefined })}
+                        {...form.register('stock', { setValueAs: numberOrUndefined })}
                       />
                     </FormControl>
                     <FormMessage />
@@ -185,7 +185,7 @@ export function ProductForm({ defaultValues, submitLabel, onSubmit }: Props) {
                         step="0.001"
                         min="0"
                         className="font-mono"
-                        {...form.register("weightKg", { setValueAs: numberOrNull })}
+                        {...form.register('weightKg', { setValueAs: numberOrNull })}
                       />
                     </FormControl>
                     <FormMessage />
@@ -203,7 +203,7 @@ export function ProductForm({ defaultValues, submitLabel, onSubmit }: Props) {
                     <Input
                       list="category-names"
                       autoComplete="off"
-                      {...form.register("category", { setValueAs: emptyToNull })}
+                      {...form.register('category', { setValueAs: emptyToNull })}
                     />
                   </FormControl>
                   <datalist id="category-names">
@@ -219,7 +219,7 @@ export function ProductForm({ defaultValues, submitLabel, onSubmit }: Props) {
           </CardContent>
           <CardFooter className="gap-2">
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving…" : submitLabel}
+              {isSubmitting ? 'Saving…' : submitLabel}
             </Button>
             <Button asChild variant="outline">
               <Link href="/products">Cancel</Link>
@@ -228,5 +228,5 @@ export function ProductForm({ defaultValues, submitLabel, onSubmit }: Props) {
         </Card>
       </form>
     </Form>
-  );
+  )
 }

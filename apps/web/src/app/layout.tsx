@@ -1,17 +1,17 @@
-import "./globals.css";
+import './globals.css'
 
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
-import { QueryProvider } from "@/components/query-provider";
-import { fontClassNames } from "@/lib/fonts";
+import { SiteFooter } from '@/components/layout/site-footer'
+import { SiteHeader } from '@/components/layout/site-header'
+import { QueryProvider } from '@/components/query-provider'
+import { fontClassNames } from '@/lib/fonts'
 
-import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import type { Metadata } from 'next'
+import type { ReactNode } from 'react'
 
 export const metadata: Metadata = {
-  title: "E-commerce",
-  description: "Product catalog and storefront",
-};
+  title: 'E-commerce',
+  description: 'Product catalog and storefront',
+}
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -24,5 +24,5 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </QueryProvider>
       </body>
     </html>
-  );
+  )
 }

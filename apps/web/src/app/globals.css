@@ -1,8 +1,8 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @theme inline {
-  --font-display: var(--font-display), "Archivo", system-ui, sans-serif;
+  --font-display: var(--font-display), 'Archivo', system-ui, sans-serif;
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --color-background: var(--background);

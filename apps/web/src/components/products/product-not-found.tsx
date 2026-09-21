@@ -1,7 +1,7 @@
-import Link from "next/link";
+import Link from 'next/link'
 
-import { NotFoundState } from "./states";
-import { Button } from "@/components/ui/button";
+import { NotFoundState } from './states'
+import { Button } from '@/components/ui/button'
 
 export function ProductNotFound() {
   return (
@@ -14,5 +14,5 @@ export function ProductNotFound() {
         </Button>
       }
     />
-  );
+  )
 }
