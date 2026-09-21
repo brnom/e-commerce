@@ -81,6 +81,7 @@ describe('ImportsPage', () => {
     const link = await screen.findByRole('link', { name: 'products.csv' })
     expect(link).toHaveAttribute('href', `/imports/${job.id}`)
     const row = link.closest('tr')!
+    expect(row).toHaveTextContent('#A60D284E')
     expect(row).toHaveTextContent('87')
     expect(row).toHaveTextContent('8')
   })

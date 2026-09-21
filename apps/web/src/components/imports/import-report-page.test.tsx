@@ -43,6 +43,7 @@ describe('ImportReportPage', () => {
     renderWithQuery(<ImportReportPage importId={id} />)
 
     expect(await screen.findByRole('heading', { level: 1, name: 'products.csv' })).toBeVisible()
+    expect(screen.getByText(/#A60D284E · Imported/)).toBeInTheDocument()
     const sheet = screen.getByText('Rows', { selector: 'dt' }).closest('dl')!
     expect(within(sheet).getByText('4')).toBeInTheDocument()
     expect(screen.getAllByRole('row')).toHaveLength(5)

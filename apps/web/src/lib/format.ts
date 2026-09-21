@@ -13,3 +13,7 @@ export function formatDateTime(iso: string): string {
 export function formatWeight(kg: number | null): string {
   return kg === null ? '—' : `${kg} kg`
 }
+
+export function formatShortId(id: string): string {
+  return `#${id.slice(-8).toUpperCase()}`
+}
