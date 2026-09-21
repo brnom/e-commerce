@@ -13,6 +13,20 @@ jobs:
   check:
     name: Lint, typecheck, test
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: ecommerce
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
 
@@ -34,6 +48,7 @@ jobs:
       - run: pnpm check
         env:
           TURBO_CACHE_DIR: .turbo
+          TEST_DATABASE_URL: postgresql://app:app@localhost:5432/ecommerce_test
 
   docker:
     name: Build images
