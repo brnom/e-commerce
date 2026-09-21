@@ -27,3 +27,13 @@ export class ConflictError extends Error {
     this.name = 'ConflictError'
   }
 }
+
+export class InvalidImportFileError extends Error {
+  constructor(
+    message: string,
+    readonly missingColumns: readonly string[] = [],
+  ) {
+    super(message)
+    this.name = 'InvalidImportFileError'
+  }
+}
