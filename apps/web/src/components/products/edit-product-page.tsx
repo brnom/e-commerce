@@ -1,35 +1,43 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
+import { Breadcrumb } from "./breadcrumb";
 import { ProductForm } from "./product-form";
-import { ApiError } from "@/lib/api-client";
-import { categoryKeys, getProduct, productKeys, updateProduct } from "@/lib/products-api";
+import { ProductNotFound } from "./product-not-found";
+import { ErrorState } from "./states";
+import { isNotFound, useProduct } from "./use-product";
+import { PageHeader } from "@/components/layout/page-header";
+import { Skeleton } from "@/components/ui/skeleton";
+import { categoryKeys, productKeys, updateProduct } from "@/lib/products-api";
 
 export function EditProductPage({ productId }: { readonly productId: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const product = useQuery({
-    queryKey: productKeys.detail(productId),
-    queryFn: () => getProduct(productId),
-    retry: (count, error) => !(error instanceof ApiError && error.status === 404) && count < 1,
-  });
+  const product = useProduct(productId);
+
+  if (product.isError && isNotFound(product.error)) {
+    return (
+      <main>
+        <ProductNotFound />
+      </main>
+    );
+  }
 
   return (
     <main>
-      <nav className="breadcrumb">
-        <Link href="/products">← Products</Link>
-      </nav>
-      <h1>Edit product</h1>
-      {product.isPending && <p>Loading…</p>}
+      <Breadcrumb
+        items={[
+          { href: "/products", label: "Products" },
+          ...(product.data ? [{ href: `/products/${productId}`, label: product.data.name }] : []),
+        ]}
+        current="Edit"
+      />
+      <PageHeader title="Edit product" eyebrow={product.data?.sku ?? "Catalog"} />
+      {product.isPending && <Skeleton className="h-96 max-w-3xl" aria-label="Loading product" />}
       {product.isError && (
-        <p role="alert">
-          {product.error instanceof ApiError && product.error.status === 404
-            ? "This product does not exist."
-            : "Could not load the product."}
-        </p>
+        <ErrorState message="Could not load the product." onRetry={() => product.refetch()} />
       )}
       {product.data && (
         <ProductForm

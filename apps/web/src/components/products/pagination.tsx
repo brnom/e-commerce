@@ -1,3 +1,7 @@
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+
 interface Props {
   readonly page: number;
   readonly limit: number;
@@ -8,16 +12,33 @@ interface Props {
 export function Pagination({ page, limit, total, onPageChange }: Props) {
   const pageCount = Math.max(1, Math.ceil(total / limit));
   return (
-    <nav className="pagination" aria-label="Pagination">
-      <button type="button" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
+    <nav
+      className="mt-6 flex items-center justify-between gap-4 font-mono text-xs tracking-wider uppercase"
+      aria-label="Pagination"
+    >
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={page <= 1}
+        onClick={() => onPageChange(page - 1)}
+      >
+        <ChevronLeft />
         Previous
-      </button>
-      <span>
-        Page {page} of {pageCount} · {total} {total === 1 ? "product" : "products"}
+      </Button>
+      <span className="text-muted-foreground">
+        Page {page} of {pageCount}
       </span>
-      <button type="button" disabled={page >= pageCount} onClick={() => onPageChange(page + 1)}>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={page >= pageCount}
+        onClick={() => onPageChange(page + 1)}
+      >
         Next
-      </button>
+        <ChevronRight />
+      </Button>
     </nav>
   );
 }
