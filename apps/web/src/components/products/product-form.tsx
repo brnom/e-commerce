@@ -221,11 +221,11 @@ export function ProductForm({ defaultValues, submitLabel, onSubmit }: Props) {
             {errors.root && <p role="alert">{errors.root.message}</p>}
           </CardContent>
           <CardFooter className="gap-2">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving…' : submitLabel}
-            </Button>
             <Button asChild variant="outline">
               <Link href="/products">Cancel</Link>
+            </Button>
+            <Button type="submit" disabled={isSubmitting} className="ml-auto">
+              {isSubmitting ? 'Saving…' : submitLabel}
             </Button>
           </CardFooter>
         </Card>
