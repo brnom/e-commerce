@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button'
 
 export default function HomePage() {
   return (
-    <main className="flex flex-col gap-10 py-10 sm:py-20">
+    <main className="flex flex-1 flex-col justify-center gap-8 sm:gap-10">
       <p className="font-mono text-xs tracking-wider text-muted-foreground uppercase">
         Catalog · Search · Purchase
       </p>
-      <h1 className="max-w-4xl display-heading text-5xl leading-none sm:text-7xl lg:text-8xl">
+      <h1 className="max-w-4xl display-heading text-4xl leading-none sm:text-[min(4.5rem,9vh)] lg:text-[min(6rem,10vh)]">
         Everything in stock, one table away.
       </h1>
       <p className="max-w-xl text-lg text-muted-foreground">
