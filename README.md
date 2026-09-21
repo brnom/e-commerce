@@ -49,6 +49,7 @@ Two lint rules are worth knowing about:
 - **`@/` imports in the API.** `@/application/ports/config` instead of `../../application/ports/config`. The Nest CLI compiles with SWC so the alias is rewritten in the emitted JavaScript; `tsc --noEmit` still type-checks every build.
 - **Layer boundaries in the API.** `domain/` may not import `application/` or `infra/`; `application/` may not import `infra/` or any framework. Enforced with `no-restricted-imports`, so a violation fails `pnpm lint`.
 - **No `dangerouslySetInnerHTML` in the web app.** Product data (names, descriptions) is user-supplied and is always rendered as text; the attribute is rejected by `no-restricted-syntax`.
+- **Copied UI components are linted like everything else.** shadcn/ui components live in `apps/web/src/components/ui` and go through the same rules (including the no-comments rule) after generation.
 
 ## Environment variables
 
@@ -79,9 +80,12 @@ apps/
     prisma/            schema and migrations
     test/              integration tests that boot the Nest application
   web/                 Next.js App Router application, client-side rendered
-    src/app/           routes (/, /products, /products/new, /products/[id]/edit)
-    src/components/    product table, filters, form, delete control
-    src/lib/           API client, typed product endpoints, URL state for the list
+    src/app/           routes (/, /products, /products/new, /products/[id], /products/[id]/edit), globals.css tokens
+    src/components/ui/ shadcn/ui components (generated, then owned)
+    src/components/layout/ header, footer, page header
+    src/components/products/ table, filters, form, detail page, delete dialog, states
+    src/lib/           API client, typed product endpoints, URL state for the list, fonts
+    src/fonts/         vendored Archivo (display); Geist comes from the `geist` package
 packages/
   shared/              zod schemas and TypeScript types used by both apps
 openspec/              change proposals, designs, specs and task lists (spec-driven workflow)
@@ -92,7 +96,7 @@ docker-compose.yml     db + api + web
 
 Each change in this repository was planned before it was built: `openspec/changes/<name>/` holds a proposal (why), a design (how, with alternatives considered), a spec delta (what the system must do, as testable scenarios) and a task list. Archived changes live in `openspec/changes/archive/`, and the accumulated behavior contract lives in `openspec/specs/`.
 
-The architectural choices, with the alternatives that were weighed, are in each change's `design.md`: [`scaffold-monorepo`](openspec/changes/archive/2026-09-20-scaffold-monorepo/design.md) and [`products-crud-search`](openspec/changes/archive/2026-09-21-products-crud-search/design.md). In short:
+The architectural choices, with the alternatives that were weighed, are in each change's `design.md`: [`scaffold-monorepo`](openspec/changes/archive/2026-09-20-scaffold-monorepo/design.md), [`products-crud-search`](openspec/changes/archive/2026-09-21-products-crud-search/design.md) and [`web-design-system`](openspec/changes/web-design-system/design.md). In short:
 
 **Foundation**
 
@@ -112,15 +116,22 @@ The architectural choices, with the alternatives that were weighed, are in each 
 - **Integration tests hit a real PostgreSQL.** Repository and HTTP tests run against `ecommerce_test`; the behaviors that matter — wildcard escaping, case-insensitive category reuse, soft-delete filtering, unique-violation translation — are SQL behaviors, and mocking Prisma would test the mock. Use cases are unit-tested with in-memory fakes.
 - **The list page keeps its state in the URL.** Search, category, sort and page are query parameters, so a filtered list can be refreshed, shared and navigated with back/forward.
 
+**Web design system**
+
+- **Tailwind CSS + shadcn/ui, components copied into the repository.** shadcn is a generator, not a dependency: each component is a file under `src/components/ui` that we own and lint. Rejected: MUI (its Material idiom must be undone through theming to reach a black-and-white look), Radix Themes (layout primitives fight Tailwind), hand-written CSS (accessible dialog and select would have to be written and tested by hand).
+- **Black, white and one gray; typography carries the design.** There are no images anywhere. Headings use Archivo Expanded (uppercase, tight tracking), interface text uses Geist Sans, and every figure (SKU, price, stock, weight, counts) uses Geist Mono so columns align. Fonts are vendored and loaded with `next/font/local`, so `docker build` never calls Google Fonts.
+- **Every data view has a loading, empty, error and not-found state**, and destructive actions confirm in a Radix dialog (focus trap, `Escape`, focus return) rather than a browser `confirm()`.
+
 ## Sample data
 
 The example product CSV used to exercise the import was downloaded on **2026-09-20**. It ships in this repository under `data/` once the CSV import change lands.
 
 ## Status
 
-| Change                 | State    | Delivers                                                       |
-| ---------------------- | -------- | -------------------------------------------------------------- |
-| `scaffold-monorepo`    | archived | monorepo, API + web skeletons, Postgres, Docker, CI, this file |
-| `products-crud-search` | archived | `Product`/`Category` model, CRUD API, list + search + form UI  |
-| `csv-import`           | planned  | CSV upload, per-row validation report, upsert by SKU           |
-| `purchase`             | planned  | orders, stock reservation, fake payment provider, purchase UI  |
+| Change                 | State       | Delivers                                                          |
+| ---------------------- | ----------- | ----------------------------------------------------------------- |
+| `scaffold-monorepo`    | archived    | monorepo, API + web skeletons, Postgres, Docker, CI, this file    |
+| `products-crud-search` | archived    | `Product`/`Category` model, CRUD API, list + search + form UI     |
+| `web-design-system`    | in progress | Tailwind + shadcn/ui, black-and-white typographic UI, detail page |
+| `csv-import`           | planned     | CSV upload, per-row validation report, upsert by SKU              |
+| `purchase`             | planned     | orders, stock reservation, fake payment provider, purchase UI     |
