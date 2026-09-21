@@ -27,6 +27,9 @@ interface Props {
   readonly size?: ComponentProps<typeof Button>['size']
 }
 
+const dangerHover =
+  'hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive active:bg-destructive/20 active:text-destructive'
+
 export function DeleteProductDialog({
   productId,
   productName,
@@ -48,7 +51,12 @@ export function DeleteProductDialog({
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant={variant} size={size} aria-label={`Delete ${productName}`}>
+        <Button
+          variant={variant}
+          size={size}
+          className={dangerHover}
+          aria-label={`Delete ${productName}`}
+        >
           Delete
         </Button>
       </AlertDialogTrigger>
@@ -64,6 +72,8 @@ export function DeleteProductDialog({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={mutation.isPending}>Cancel</AlertDialogCancel>
           <AlertDialogAction
+            variant="outline"
+            className={dangerHover}
             disabled={mutation.isPending}
             onClick={(event) => {
               event.preventDefault()
