@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
 import Link from 'next/link'
 
 import { DeleteProductDialog } from './delete-product-dialog'
+import { AddToCartButton } from '@/components/cart/add-to-cart-button'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -113,6 +114,7 @@ export function ProductsTable({ items, state, onSort }: Props) {
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
+                  <AddToCartButton product={product} variant="ghost" size="sm" />
                   <Button asChild variant="ghost" size="sm">
                     <Link href={`/products/${product.id}/edit`}>Edit</Link>
                   </Button>

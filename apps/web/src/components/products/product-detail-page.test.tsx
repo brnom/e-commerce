@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ProductDetailPage } from './product-detail-page'
+import { cartStore } from '@/lib/cart-store'
 import { calls, renderWithQuery, stubApi } from '@/test-utils'
 
 const push = vi.fn()
@@ -34,6 +35,32 @@ describe('ProductDetailPage', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     push.mockReset()
+    cartStore.clear()
+  })
+
+  it('adds the chosen quantity to the cart', async () => {
+    stubApi([{ path: new RegExp(`/products/${id}$`), body: product }])
+    renderWithQuery(<ProductDetailPage productId={id} />)
+    const user = userEvent.setup()
+
+    const quantity = await screen.findByLabelText('Quantity')
+    await user.clear(quantity)
+    await user.type(quantity, '2')
+    await user.click(screen.getByRole('button', { name: 'Add Running Shoes to cart' }))
+
+    expect(cartStore.getSnapshot()).toEqual([
+      expect.objectContaining({ productId: id, sku: 'RS-001', unitPrice: 89.99, quantity: 2 }),
+    ])
+  })
+
+  it('disables the purchase when the product is out of stock', async () => {
+    stubApi([{ path: new RegExp(`/products/${id}$`), body: { ...product, stock: 0 } }])
+    renderWithQuery(<ProductDetailPage productId={id} />)
+
+    expect(
+      await screen.findByRole('button', { name: 'Out of stock: Running Shoes' }),
+    ).toBeDisabled()
+    expect(screen.getByLabelText('Quantity')).toBeDisabled()
   })
 
   it('shows every field of the product', async () => {

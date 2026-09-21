@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ProductsTable } from './products-table'
+import { cartStore } from '@/lib/cart-store'
 import { defaultListState } from '@/lib/product-list-params'
 import { calls, renderWithQuery, stubApi } from '@/test-utils'
 
@@ -36,6 +37,24 @@ const renderTable = (items: ProductResponse[], onSort = vi.fn()) =>
 describe('ProductsTable', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
+    cartStore.clear()
+  })
+
+  it('adds one unit to the cart per click and disables the control when out of stock', async () => {
+    stubApi([])
+    renderTable([
+      product({}),
+      product({ id: 'p-2', sku: 'WM-042', name: 'Wireless Mouse', stock: 0 }),
+    ])
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: 'Add Running Shoes to cart' }))
+    await user.click(screen.getByRole('button', { name: 'Add Running Shoes to cart' }))
+
+    expect(cartStore.getSnapshot()).toEqual([
+      expect.objectContaining({ productId: '01a0c40d-90c3-750a-af78-7d4aa60d284e', quantity: 2 }),
+    ])
+    expect(screen.getByRole('button', { name: 'Out of stock: Wireless Mouse' })).toBeDisabled()
   })
 
   it('renders markup in product fields as literal text', () => {
