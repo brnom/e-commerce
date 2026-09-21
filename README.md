@@ -80,14 +80,16 @@ apps/
     prisma/            schema and migrations
     test/              integration tests that boot the Nest application
   web/                 Next.js App Router application, client-side rendered
-    src/app/           routes (/, /products, /products/new, /products/[id], /products/[id]/edit), globals.css tokens
+    src/app/           routes (/, /products, /products/new, /products/[id], /products/[id]/edit, /imports, /imports/[id]), globals.css tokens
     src/components/ui/ shadcn/ui components (generated, then owned)
     src/components/layout/ header, footer, page header
     src/components/products/ table, filters, form, detail page, delete dialog, states
-    src/lib/           API client, typed product endpoints, URL state for the list, fonts
+    src/components/imports/  upload card, import history, per-row report
+    src/lib/           API client, typed product and import endpoints, URL state for the list, fonts
     src/fonts/         vendored Archivo (display); Geist comes from the `geist` package
 packages/
   shared/              zod schemas and TypeScript types used by both apps
+data/                  sample product CSV used by the import's integration test
 openspec/              change proposals, designs, specs and task lists (spec-driven workflow)
 docker-compose.yml     db + api + web
 ```
@@ -96,7 +98,7 @@ docker-compose.yml     db + api + web
 
 Each change in this repository was planned before it was built: `openspec/changes/<name>/` holds a proposal (why), a design (how, with alternatives considered), a spec delta (what the system must do, as testable scenarios) and a task list. Archived changes live in `openspec/changes/archive/`, and the accumulated behavior contract lives in `openspec/specs/`.
 
-The architectural choices, with the alternatives that were weighed, are in each change's `design.md`: [`scaffold-monorepo`](openspec/changes/archive/2026-09-20-scaffold-monorepo/design.md), [`products-crud-search`](openspec/changes/archive/2026-09-21-products-crud-search/design.md) and [`web-design-system`](openspec/changes/archive/2026-09-21-web-design-system/design.md). In short:
+The architectural choices, with the alternatives that were weighed, are in each change's `design.md`: [`scaffold-monorepo`](openspec/changes/archive/2026-09-20-scaffold-monorepo/design.md), [`products-crud-search`](openspec/changes/archive/2026-09-21-products-crud-search/design.md), [`web-design-system`](openspec/changes/archive/2026-09-21-web-design-system/design.md) and [`csv-import`](openspec/changes/csv-import/design.md). In short:
 
 **Foundation**
 
@@ -122,16 +124,38 @@ The architectural choices, with the alternatives that were weighed, are in each 
 - **Black, white and one gray; typography carries the design.** There are no images anywhere. Headings use Archivo Expanded (uppercase, tight tracking), interface text uses Geist Sans, and every figure (SKU, price, stock, weight, counts) uses Geist Mono so columns align. Fonts are vendored and loaded with `next/font/local`, so `docker build` never calls Google Fonts.
 - **Every data view has a loading, empty, error and not-found state**, and destructive actions confirm in a Radix dialog (focus trap, `Escape`, focus return) rather than a browser `confirm()`.
 
-## Sample data
+**CSV import**
 
-The example product CSV used to exercise the import was downloaded on **2026-09-20**. It ships in this repository under `data/` once the CSV import change lands.
+- **Partial import with a per-row report.** Every row is validated with the product schema; valid rows are written and each invalid row is reported with its line number, field and message, so a supplier file with a few bad lines still loads and the report says exactly what to fix. Rejected: all-or-nothing (one `$29.99` blocks 90 good rows) and silent skipping (nobody learns what was dropped).
+- **Rows match products by SKU; a known SKU updates, an unknown one creates.** Re-importing the same file never duplicates a product. A SKU that belongs to a deleted product brings it back, since the file says the store wants it. Inside one file the first occurrence of a SKU wins and later ones are rejected pointing at the first line; last-wins would let a stray copy at the bottom overwrite a deliberate row.
+- **Columns absent from the file leave stored values untouched; blank cells clear them.** A price list that only carries `sku,price,stock` updates prices without wiping descriptions.
+- **One transaction per file, owned by a single port method.** The use case parses and validates in memory and hands a plan (writes plus rejected rows) to `ImportJobRepository.commit`, which upserts the products, resolves categories and records the job in one interactive transaction. The history never claims products that are not there. Rejected: a generic unit-of-work port threaded through every repository, for one caller.
+- **Every import is recorded** (`ImportJob` with counters and the row report as JSON) so a past report can be reopened from `/imports`.
+
+## CSV import
+
+Upload a file at `/imports`, or `curl -F file=@data/e-commerce_input.csv http://localhost:3001/imports`. The response, and `GET /imports/{id}` later, is the job with one entry per data row.
+
+| Column        | Required | Rule                                                                  |
+| ------------- | -------- | --------------------------------------------------------------------- |
+| `name`        | yes      | 1–200 characters after trimming                                       |
+| `sku`         | yes      | 1–64 characters, stored upper-cased, matched case-insensitively       |
+| `price`       | yes      | plain decimal, `.` separator, at most two fraction digits, no symbols |
+| `stock`       | yes      | non-negative integer                                                  |
+| `description` | no       | at most 2000 characters                                               |
+| `category`    | no       | created on demand, matched case-insensitively                         |
+| `weight_kg`   | no       | plain decimal, at most three fraction digits                          |
+
+Header names are matched case-insensitively; unknown columns are ignored. UTF-8 with an optional BOM, comma-separated, quoted fields allowed. Limits: 2 MB and 5,000 data rows per file. Each row ends as `created`, `updated`, `skipped` (entirely blank line) or `failed` (with issues); rows are numbered by their line in the file, the header being line 1.
+
+The sample file `data/e-commerce_input.csv` (downloaded on **2026-09-20**) has 97 data rows and imports as **87 created, 2 skipped, 8 failed**: `$29.99` and `free` as prices, `-5` stock, an empty and a whitespace-only name, and three later duplicates of `RS-001` / `BS-021`. Importing it a second time gives 87 updated. That outcome is asserted by `apps/api/test/imports.integration.test.ts`.
 
 ## Status
 
-| Change                 | State    | Delivers                                                          |
-| ---------------------- | -------- | ----------------------------------------------------------------- |
-| `scaffold-monorepo`    | archived | monorepo, API + web skeletons, Postgres, Docker, CI, this file    |
-| `products-crud-search` | archived | `Product`/`Category` model, CRUD API, list + search + form UI     |
-| `web-design-system`    | archived | Tailwind + shadcn/ui, black-and-white typographic UI, detail page |
-| `csv-import`           | planned  | CSV upload, per-row validation report, upsert by SKU              |
-| `purchase`             | planned  | orders, stock reservation, fake payment provider, purchase UI     |
+| Change                 | State     | Delivers                                                          |
+| ---------------------- | --------- | ----------------------------------------------------------------- |
+| `scaffold-monorepo`    | archived  | monorepo, API + web skeletons, Postgres, Docker, CI, this file    |
+| `products-crud-search` | archived  | `Product`/`Category` model, CRUD API, list + search + form UI     |
+| `web-design-system`    | archived  | Tailwind + shadcn/ui, black-and-white typographic UI, detail page |
+| `csv-import`           | in review | CSV upload, per-row validation report, upsert by SKU              |
+| `purchase`             | planned   | orders, stock reservation, fake payment provider, purchase UI     |
