@@ -1,44 +1,44 @@
-"use client";
+'use client'
 
-import { Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Search } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
-import { useCategories } from "./use-categories";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useCategories } from './use-categories'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select'
 
-import type { ProductListState } from "@/lib/product-list-params";
+import type { ProductListState } from '@/lib/product-list-params'
 
-const SEARCH_DEBOUNCE_MS = 300;
-const ALL_CATEGORIES = "all";
+const SEARCH_DEBOUNCE_MS = 300
+const ALL_CATEGORIES = 'all'
 
 interface Props {
-  readonly state: ProductListState;
-  readonly onChange: (changes: Partial<ProductListState>) => void;
+  readonly state: ProductListState
+  readonly onChange: (changes: Partial<ProductListState>) => void
 }
 
 export function ProductFilters({ state, onChange }: Props) {
-  const [search, setSearch] = useState(state.q);
-  const [syncedQuery, setSyncedQuery] = useState(state.q);
-  const categories = useCategories();
+  const [search, setSearch] = useState(state.q)
+  const [syncedQuery, setSyncedQuery] = useState(state.q)
+  const categories = useCategories()
 
   if (syncedQuery !== state.q) {
-    setSyncedQuery(state.q);
-    setSearch(state.q);
+    setSyncedQuery(state.q)
+    setSearch(state.q)
   }
 
   useEffect(() => {
-    if (search === state.q) return;
-    const timer = setTimeout(() => onChange({ q: search, page: 1 }), SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [search, state.q, onChange]);
+    if (search === state.q) return
+    const timer = setTimeout(() => onChange({ q: search, page: 1 }), SEARCH_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+  }, [search, state.q, onChange])
 
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end" role="search">
@@ -66,7 +66,7 @@ export function ProductFilters({ state, onChange }: Props) {
           name="category"
           value={state.category || ALL_CATEGORIES}
           onValueChange={(value) =>
-            onChange({ category: value === ALL_CATEGORIES ? "" : value, page: 1 })
+            onChange({ category: value === ALL_CATEGORIES ? '' : value, page: 1 })
           }
         >
           <SelectTrigger id="product-category" className="w-full">
@@ -83,5 +83,5 @@ export function ProductFilters({ state, onChange }: Props) {
         </Select>
       </div>
     </div>
-  );
+  )
 }

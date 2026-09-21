@@ -1,9 +1,9 @@
-import { normalizeCategoryName, normalizeSku } from "@/domain/product/product";
+import { normalizeCategoryName, normalizeSku } from '@/domain/product/product'
 
-import type { CategoryRepository } from "@/application/ports/category-repository";
-import type { ProductRepository } from "@/application/ports/product-repository";
-import type { Product } from "@/domain/product/product";
-import type { CreateProduct as CreateProductInput } from "@ecommerce/shared";
+import type { CategoryRepository } from '@/application/ports/category-repository'
+import type { ProductRepository } from '@/application/ports/product-repository'
+import type { Product } from '@/domain/product/product'
+import type { CreateProduct as CreateProductInput } from '@ecommerce/shared'
 
 export class CreateProduct {
   constructor(
@@ -14,7 +14,7 @@ export class CreateProduct {
   async execute(input: CreateProductInput): Promise<Product> {
     const category = input.category
       ? await this.categories.findOrCreate(normalizeCategoryName(input.category))
-      : null;
+      : null
     return this.products.create({
       sku: normalizeSku(input.sku),
       name: input.name,
@@ -23,6 +23,6 @@ export class CreateProduct {
       stock: input.stock,
       weightKg: input.weightKg ?? null,
       categoryId: category?.id ?? null,
-    });
+    })
   }
 }

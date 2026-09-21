@@ -5,20 +5,20 @@ import {
   type CreateProduct as CreateProductInput,
   type ListProductsQuery,
   type UpdateProduct as UpdateProductInput,
-} from "@ecommerce/shared";
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from "@nestjs/common";
+} from '@ecommerce/shared'
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common'
 
-import { ProductIdPipe } from "./product-id.pipe";
-import { ZodValidationPipe } from "../zod-validation.pipe";
-import { CreateProduct } from "@/application/products/create-product";
-import { DeleteProduct } from "@/application/products/delete-product";
-import { GetProduct } from "@/application/products/get-product";
-import { ListProducts, type ProductPage } from "@/application/products/list-products";
-import { UpdateProduct } from "@/application/products/update-product";
+import { ProductIdPipe } from './product-id.pipe'
+import { ZodValidationPipe } from '../zod-validation.pipe'
+import { CreateProduct } from '@/application/products/create-product'
+import { DeleteProduct } from '@/application/products/delete-product'
+import { GetProduct } from '@/application/products/get-product'
+import { ListProducts, type ProductPage } from '@/application/products/list-products'
+import { UpdateProduct } from '@/application/products/update-product'
 
-import type { Product } from "@/domain/product/product";
+import type { Product } from '@/domain/product/product'
 
-@Controller("products")
+@Controller('products')
 export class ProductsController {
   constructor(
     private readonly createProduct: CreateProduct,
@@ -32,32 +32,32 @@ export class ProductsController {
   create(
     @Body(new ZodValidationPipe(createProductSchema)) body: CreateProductInput,
   ): Promise<Product> {
-    return this.createProduct.execute(body);
+    return this.createProduct.execute(body)
   }
 
   @Get()
   list(
     @Query(new ZodValidationPipe(listProductsQuerySchema)) query: ListProductsQuery,
   ): Promise<ProductPage> {
-    return this.listProducts.execute(query);
+    return this.listProducts.execute(query)
   }
 
-  @Get(":id")
-  get(@Param("id", ProductIdPipe) id: string): Promise<Product> {
-    return this.getProduct.execute(id);
+  @Get(':id')
+  get(@Param('id', ProductIdPipe) id: string): Promise<Product> {
+    return this.getProduct.execute(id)
   }
 
-  @Patch(":id")
+  @Patch(':id')
   update(
-    @Param("id", ProductIdPipe) id: string,
+    @Param('id', ProductIdPipe) id: string,
     @Body(new ZodValidationPipe(updateProductSchema)) body: UpdateProductInput,
   ): Promise<Product> {
-    return this.updateProduct.execute(id, body);
+    return this.updateProduct.execute(id, body)
   }
 
-  @Delete(":id")
+  @Delete(':id')
   @HttpCode(204)
-  remove(@Param("id", ProductIdPipe) id: string): Promise<void> {
-    return this.deleteProduct.execute(id);
+  remove(@Param('id', ProductIdPipe) id: string): Promise<void> {
+    return this.deleteProduct.execute(id)
   }
 }

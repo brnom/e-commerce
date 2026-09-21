@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 
 import {
   AlertDialog,
@@ -13,37 +13,37 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { deleteProduct, productKeys } from "@/lib/products-api";
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { deleteProduct, productKeys } from '@/lib/products-api'
 
-import type { ComponentProps } from "react";
+import type { ComponentProps } from 'react'
 
 interface Props {
-  readonly productId: string;
-  readonly productName: string;
-  readonly onDeleted?: () => void;
-  readonly variant?: ComponentProps<typeof Button>["variant"];
-  readonly size?: ComponentProps<typeof Button>["size"];
+  readonly productId: string
+  readonly productName: string
+  readonly onDeleted?: () => void
+  readonly variant?: ComponentProps<typeof Button>['variant']
+  readonly size?: ComponentProps<typeof Button>['size']
 }
 
 export function DeleteProductDialog({
   productId,
   productName,
   onDeleted,
-  variant = "ghost",
-  size = "sm",
+  variant = 'ghost',
+  size = 'sm',
 }: Props) {
-  const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false)
+  const queryClient = useQueryClient()
   const mutation = useMutation({
     mutationFn: () => deleteProduct(productId),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: productKeys.all });
-      setOpen(false);
-      onDeleted?.();
+      await queryClient.invalidateQueries({ queryKey: productKeys.all })
+      setOpen(false)
+      onDeleted?.()
     },
-  });
+  })
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
@@ -66,14 +66,14 @@ export function DeleteProductDialog({
           <AlertDialogAction
             disabled={mutation.isPending}
             onClick={(event) => {
-              event.preventDefault();
-              mutation.mutate();
+              event.preventDefault()
+              mutation.mutate()
             }}
           >
-            {mutation.isPending ? "Deleting…" : "Delete"}
+            {mutation.isPending ? 'Deleting…' : 'Delete'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }

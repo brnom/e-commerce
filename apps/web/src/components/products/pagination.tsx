@@ -1,16 +1,16 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button'
 
 interface Props {
-  readonly page: number;
-  readonly limit: number;
-  readonly total: number;
-  readonly onPageChange: (page: number) => void;
+  readonly page: number
+  readonly limit: number
+  readonly total: number
+  readonly onPageChange: (page: number) => void
 }
 
 export function Pagination({ page, limit, total, onPageChange }: Props) {
-  const pageCount = Math.max(1, Math.ceil(total / limit));
+  const pageCount = Math.max(1, Math.ceil(total / limit))
   return (
     <nav
       className="mt-6 flex items-center justify-between gap-4 font-mono text-xs tracking-wider uppercase"
@@ -40,5 +40,5 @@ export function Pagination({ page, limit, total, onPageChange }: Props) {
         <ChevronRight />
       </Button>
     </nav>
-  );
+  )
 }

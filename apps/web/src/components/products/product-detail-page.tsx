@@ -1,30 +1,30 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
-import { Breadcrumb } from "./breadcrumb";
-import { DeleteProductDialog } from "./delete-product-dialog";
-import { ProductNotFound } from "./product-not-found";
-import { ErrorState } from "./states";
-import { isNotFound, useProduct } from "./use-product";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { formatDateTime, formatMoney, formatWeight } from "@/lib/format";
+import { Breadcrumb } from './breadcrumb'
+import { DeleteProductDialog } from './delete-product-dialog'
+import { ProductNotFound } from './product-not-found'
+import { ErrorState } from './states'
+import { isNotFound, useProduct } from './use-product'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
+import { formatDateTime, formatMoney, formatWeight } from '@/lib/format'
 
-import type { ProductResponse } from "@ecommerce/shared";
+import type { ProductResponse } from '@ecommerce/shared'
 
 function SpecSheet({ product }: { readonly product: ProductResponse }) {
   const rows: ReadonlyArray<{ label: string; value: string }> = [
-    { label: "SKU", value: product.sku },
-    { label: "Category", value: product.category?.name ?? "—" },
-    { label: "Stock", value: String(product.stock) },
-    { label: "Weight", value: formatWeight(product.weightKg) },
-    { label: "Created", value: formatDateTime(product.createdAt) },
-    { label: "Updated", value: formatDateTime(product.updatedAt) },
-  ];
+    { label: 'SKU', value: product.sku },
+    { label: 'Category', value: product.category?.name ?? '—' },
+    { label: 'Stock', value: String(product.stock) },
+    { label: 'Weight', value: formatWeight(product.weightKg) },
+    { label: 'Created', value: formatDateTime(product.createdAt) },
+    { label: 'Updated', value: formatDateTime(product.updatedAt) },
+  ]
   return (
     <dl className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3">
       {rows.map((row) => (
@@ -36,26 +36,26 @@ function SpecSheet({ product }: { readonly product: ProductResponse }) {
         </div>
       ))}
     </dl>
-  );
+  )
 }
 
 export function ProductDetailPage({ productId }: { readonly productId: string }) {
-  const router = useRouter();
-  const product = useProduct(productId);
+  const router = useRouter()
+  const product = useProduct(productId)
 
   if (product.isError && isNotFound(product.error)) {
     return (
       <main>
         <ProductNotFound />
       </main>
-    );
+    )
   }
 
   return (
     <main>
       <Breadcrumb
-        items={[{ href: "/products", label: "Products" }]}
-        current={product.data?.name ?? "Product"}
+        items={[{ href: '/products', label: 'Products' }]}
+        current={product.data?.name ?? 'Product'}
       />
       {product.isPending && (
         <div className="space-y-6" aria-busy="true" aria-label="Loading product">
@@ -98,11 +98,11 @@ export function ProductDetailPage({ productId }: { readonly productId: string })
               productName={product.data.name}
               variant="outline"
               size="lg"
-              onDeleted={() => router.push("/products")}
+              onDeleted={() => router.push('/products')}
             />
           </aside>
         </article>
       )}
     </main>
-  );
+  )
 }

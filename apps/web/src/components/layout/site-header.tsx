@@ -1,8 +1,8 @@
-import Link from "next/link";
+import Link from 'next/link'
 
-import { ApiHealth } from "@/components/api-health";
+import { ApiHealth } from '@/components/api-health'
 
-const links = [{ href: "/products", label: "Products" }];
+const links = [{ href: '/products', label: 'Products' }]
 
 export function SiteHeader() {
   return (
@@ -28,5 +28,5 @@ export function SiteHeader() {
         </nav>
       </div>
     </header>
-  );
+  )
 }

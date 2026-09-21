@@ -1,8 +1,8 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  output: "standalone",
-  transpilePackages: ["@ecommerce/shared"],
-};
+  output: 'standalone',
+  transpilePackages: ['@ecommerce/shared'],
+}
 
-export default nextConfig;
+export default nextConfig
