@@ -96,7 +96,7 @@ docker-compose.yml     db + api + web
 
 Each change in this repository was planned before it was built: `openspec/changes/<name>/` holds a proposal (why), a design (how, with alternatives considered), a spec delta (what the system must do, as testable scenarios) and a task list. Archived changes live in `openspec/changes/archive/`, and the accumulated behavior contract lives in `openspec/specs/`.
 
-The architectural choices, with the alternatives that were weighed, are in each change's `design.md`: [`scaffold-monorepo`](openspec/changes/archive/2026-09-20-scaffold-monorepo/design.md), [`products-crud-search`](openspec/changes/archive/2026-09-21-products-crud-search/design.md) and [`web-design-system`](openspec/changes/web-design-system/design.md). In short:
+The architectural choices, with the alternatives that were weighed, are in each change's `design.md`: [`scaffold-monorepo`](openspec/changes/archive/2026-09-20-scaffold-monorepo/design.md), [`products-crud-search`](openspec/changes/archive/2026-09-21-products-crud-search/design.md) and [`web-design-system`](openspec/changes/archive/2026-09-21-web-design-system/design.md). In short:
 
 **Foundation**
 
@@ -128,10 +128,10 @@ The example product CSV used to exercise the import was downloaded on **2026-09-
 
 ## Status
 
-| Change                 | State       | Delivers                                                          |
-| ---------------------- | ----------- | ----------------------------------------------------------------- |
-| `scaffold-monorepo`    | archived    | monorepo, API + web skeletons, Postgres, Docker, CI, this file    |
-| `products-crud-search` | archived    | `Product`/`Category` model, CRUD API, list + search + form UI     |
-| `web-design-system`    | in progress | Tailwind + shadcn/ui, black-and-white typographic UI, detail page |
-| `csv-import`           | planned     | CSV upload, per-row validation report, upsert by SKU              |
-| `purchase`             | planned     | orders, stock reservation, fake payment provider, purchase UI     |
+| Change                 | State    | Delivers                                                          |
+| ---------------------- | -------- | ----------------------------------------------------------------- |
+| `scaffold-monorepo`    | archived | monorepo, API + web skeletons, Postgres, Docker, CI, this file    |
+| `products-crud-search` | archived | `Product`/`Category` model, CRUD API, list + search + form UI     |
+| `web-design-system`    | archived | Tailwind + shadcn/ui, black-and-white typographic UI, detail page |
+| `csv-import`           | planned  | CSV upload, per-row validation report, upsert by SKU              |
+| `purchase`             | planned  | orders, stock reservation, fake payment provider, purchase UI     |

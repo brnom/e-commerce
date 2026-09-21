@@ -8,3 +8,4 @@ apps/api/src/generated
 apps/api/prisma/migrations
 openspec
 .claude
+apps/web/next-env.d.ts
