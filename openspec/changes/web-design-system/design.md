@@ -50,7 +50,7 @@ app/layout.tsx
   <html class={fonts}> <body>
     <QueryProvider>
       <SiteHeader/>          wordmark · nav (Products) · <ApiHealth/> as a mono badge
-      <main class="container max-w-6xl px-4 py-10">{children}</main>
+      <main class="container max-w-6xl px-4 py-6">{children}</main>
       <SiteFooter/>          one line, mono
 ```
 

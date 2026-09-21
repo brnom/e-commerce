@@ -51,7 +51,7 @@ export function NotFoundState({
   readonly action: ReactNode
 }) {
   return (
-    <div className="flex flex-col items-start gap-4 py-10">
+    <div className="flex flex-col items-start gap-4 py-6">
       <p className="font-mono text-xs tracking-wider text-muted-foreground uppercase">404</p>
       <h1 className="display-heading text-4xl sm:text-5xl">{title}</h1>
       <p className="max-w-md text-muted-foreground">{description}</p>
