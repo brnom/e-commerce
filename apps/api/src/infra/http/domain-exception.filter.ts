@@ -1,15 +1,23 @@
 import { ArgumentsHost, Catch, ExceptionFilter } from "@nestjs/common";
 
-import { DomainValidationError, NotFoundError } from "@/domain/shared/domain-error";
+import { ConflictError, DomainValidationError, NotFoundError } from "@/domain/shared/domain-error";
 
 import type { Response } from "express";
 
-@Catch(DomainValidationError, NotFoundError)
+type DomainException = DomainValidationError | NotFoundError | ConflictError;
+
+@Catch(DomainValidationError, NotFoundError, ConflictError)
 export class DomainExceptionFilter implements ExceptionFilter {
-  catch(exception: DomainValidationError | NotFoundError, host: ArgumentsHost): void {
+  catch(exception: DomainException, host: ArgumentsHost): void {
     const response = host.switchToHttp().getResponse<Response>();
     if (exception instanceof NotFoundError) {
       response.status(404).json({ message: exception.message, resource: exception.resource });
+      return;
+    }
+    if (exception instanceof ConflictError) {
+      response
+        .status(409)
+        .json({ message: exception.message, field: exception.field, value: exception.value });
       return;
     }
     response.status(400).json({

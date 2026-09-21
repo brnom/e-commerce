@@ -17,3 +17,13 @@ export class NotFoundError extends Error {
     this.name = "NotFoundError";
   }
 }
+
+export class ConflictError extends Error {
+  constructor(
+    readonly field: string,
+    readonly value: string,
+  ) {
+    super(`${field} ${JSON.stringify(value)} is already taken`);
+    this.name = "ConflictError";
+  }
+}
