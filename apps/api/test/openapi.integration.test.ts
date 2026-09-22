@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { AppModule } from '@/app.module'
 import { OPENAPI_JSON_PATH, OPENAPI_PATH, setupOpenApi } from '@/infra/http/openapi/openapi'
+import { SCHEMA_COMPONENT_IDS } from '@/infra/http/openapi/schema-components'
 import { PrismaService } from '@/infra/persistence/prisma/prisma.service'
 
 import type { OpenAPIObject } from '@nestjs/swagger'
@@ -118,6 +119,12 @@ describe('OpenAPI document', () => {
         },
       },
     })
+  })
+
+  it('gives every registered schema its own named component', () => {
+    const named = Object.keys(document.components?.schemas ?? {})
+
+    expect(named).toEqual(expect.arrayContaining(SCHEMA_COMPONENT_IDS))
   })
 
   it('names every schema it references', () => {

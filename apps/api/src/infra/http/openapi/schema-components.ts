@@ -60,10 +60,10 @@ const components: ReadonlyArray<readonly [string, ZodType]> = [
   ['InvalidImportFileError', invalidImportFileErrorSchema],
 ]
 
+export const SCHEMA_COMPONENT_IDS = components.map(([id]) => id)
+
 export function registerSchemaComponents(): void {
   for (const [id, schema] of components) {
-    if (!z.globalRegistry.has(schema)) {
-      z.globalRegistry.add(schema, { id })
-    }
+    z.globalRegistry.add(schema, { ...z.globalRegistry.get(schema), id })
   }
 }
