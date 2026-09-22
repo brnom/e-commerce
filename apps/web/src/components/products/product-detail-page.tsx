@@ -79,7 +79,7 @@ function BuyBox({ product }: { readonly product: ProductResponse }) {
       {addedOnce && (
         <Link
           href="/cart"
-          className="inline-flex animate-in items-center gap-1 self-center text-sm underline-offset-4 fade-in hover:underline"
+          className="inline-flex animate-in items-center gap-1 self-center text-link text-sm fade-in"
         >
           View cart
           <ArrowRight className="size-4" />

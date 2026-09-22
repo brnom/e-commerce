@@ -63,10 +63,7 @@ export function CartLinesTable({
           {lines.map((line) => (
             <TableRow key={line.productId}>
               <TableCell>
-                <Link
-                  href={`/products/${line.productId}`}
-                  className="font-medium underline-offset-4 hover:underline"
-                >
+                <Link href={`/products/${line.productId}`} className="text-link font-medium">
                   {line.name}
                 </Link>
                 <p className="font-mono text-xs text-muted-foreground">{line.sku}</p>

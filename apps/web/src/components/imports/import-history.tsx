@@ -72,7 +72,7 @@ export function ImportHistory() {
                 {formatShortId(job.id)}
               </TableCell>
               <TableCell className="font-medium">
-                <Link href={`/imports/${job.id}`} className="underline-offset-4 hover:underline">
+                <Link href={`/imports/${job.id}`} className="text-link">
                   {job.fileName}
                 </Link>
               </TableCell>

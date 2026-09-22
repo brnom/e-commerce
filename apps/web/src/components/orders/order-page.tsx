@@ -87,10 +87,7 @@ function OrderLines({ order }: { readonly order: OrderResponse }) {
           {order.lines.map((line) => (
             <TableRow key={line.productId}>
               <TableCell className="font-medium">
-                <Link
-                  href={`/products/${line.productId}`}
-                  className="underline-offset-4 hover:underline"
-                >
+                <Link href={`/products/${line.productId}`} className="text-link">
                   {line.name}
                 </Link>
               </TableCell>

@@ -197,7 +197,7 @@ export function CheckoutPage() {
           <p className="font-medium">Payment declined: {declined.reason}</p>
           <p className="text-sm text-muted-foreground">
             Your cart was kept. Try another card, or review{' '}
-            <Link href={`/orders/${declined.orderId}`} className="underline underline-offset-4">
+            <Link href={`/orders/${declined.orderId}`} className="text-link underline">
               order {formatShortId(declined.orderId)}
             </Link>
             .

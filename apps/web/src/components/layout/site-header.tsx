@@ -25,14 +25,14 @@ export function SiteHeader() {
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="text-xs font-medium tracking-wider uppercase underline-offset-4 hover:underline sm:text-sm"
+                  className="text-link text-xs font-medium tracking-wider uppercase sm:text-sm"
                 >
                   {link.label}
                 </Link>
               </li>
             ))}
             <li>
-              <CartLink className="text-xs font-medium tracking-wider uppercase underline-offset-4 hover:underline sm:text-sm" />
+              <CartLink className="text-link text-xs font-medium tracking-wider uppercase sm:text-sm" />
             </li>
           </ul>
           <ApiHealth className="hidden text-muted-foreground sm:inline-flex" />
