@@ -1,13 +1,14 @@
 'use client'
 
-import { ArrowRight, Trash2 } from 'lucide-react'
+import { MAX_ITEM_QUANTITY } from '@ecommerce/shared'
+import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
 
+import { QuantityStepper } from './quantity-stepper'
+import { RemoveLineDialog } from './remove-line-dialog'
 import { PageHeader } from '@/components/layout/page-header'
 import { EmptyState } from '@/components/products/states'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -29,29 +30,6 @@ export function CartEmptyState() {
           <Link href="/products">Browse products</Link>
         </Button>
       }
-    />
-  )
-}
-
-type Draft = { readonly raw: string; readonly quantity: number }
-
-function QuantityInput({ line }: { readonly line: CartLine }) {
-  const [draft, setDraft] = useState<Draft | null>(null)
-  const raw = draft && draft.quantity === line.quantity ? draft.raw : String(line.quantity)
-  return (
-    <Input
-      type="number"
-      inputMode="numeric"
-      min={1}
-      aria-label={`Quantity of ${line.name}`}
-      value={raw}
-      onChange={(event) => {
-        const next = Number.parseInt(event.target.value, 10)
-        if (next >= 1) cartStore.setQuantity(line.productId, next)
-        setDraft({ raw: event.target.value, quantity: next >= 1 ? next : line.quantity })
-      }}
-      onBlur={() => setDraft(null)}
-      className="ml-auto w-20 text-right font-mono tabular-nums"
     />
   )
 }
@@ -97,22 +75,24 @@ export function CartLinesTable({
                 {formatMoney(line.unitPrice)}
               </TableCell>
               <TableCell className="text-right font-mono tabular-nums">
-                {editable ? <QuantityInput line={line} /> : line.quantity}
+                {editable ? (
+                  <QuantityStepper
+                    name={line.name}
+                    value={line.quantity}
+                    max={MAX_ITEM_QUANTITY}
+                    onChange={(quantity) => cartStore.setQuantity(line.productId, quantity)}
+                    className="ml-auto"
+                  />
+                ) : (
+                  line.quantity
+                )}
               </TableCell>
               <TableCell className="text-right font-mono tabular-nums">
                 {formatMoney(lineTotal(line))}
               </TableCell>
               {editable && (
                 <TableCell className="text-right">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    aria-label={`Remove ${line.name}`}
-                    onClick={() => cartStore.remove(line.productId)}
-                  >
-                    <Trash2 />
-                  </Button>
+                  <RemoveLineDialog line={line} />
                 </TableCell>
               )}
             </TableRow>
