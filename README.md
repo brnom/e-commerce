@@ -201,3 +201,7 @@ Endpoints: `POST /orders` (`{ items: [{ productId, quantity }], customer: { name
 | `csv-import`           | archived | CSV upload, per-row validation report, upsert by SKU                                    |
 | `purchase`             | archived | cart, checkout, orders API with stock reservation, fake payment                         |
 | `purchase-ux`          | archived | one-click checkout with test-card selector, steppers, confirmed removal, pressed states |
+
+## License
+
+[Apache License 2.0](LICENSE). The sample CSV under `data/` is test data, not product data.
