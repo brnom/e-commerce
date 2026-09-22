@@ -19,7 +19,7 @@ Both recordings are of the running stack: the Next.js app on `localhost:3005` ta
 ## Prerequisites
 
 - Docker Desktop (or Docker Engine 24+ with the Compose plugin) to run the stack.
-- For local development additionally: Node 24 and pnpm 10 (`corepack enable && corepack prepare pnpm@10.32.1 --activate`).
+- For local development additionally: Node 26 and pnpm 10 (`npm install --global pnpm@10.32.1`).
 
 ## Run with Docker
 
