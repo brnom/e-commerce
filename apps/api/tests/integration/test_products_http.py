@@ -127,11 +127,17 @@ async def test_soft_deletes_and_keeps_the_sku_reserved(api: AsyncClient) -> None
     assert deleted.status_code == 204
     assert deleted.content == b''
 
-    assert (await api.get(path)).status_code == 404
-    assert (await api.patch(path, json={'stock': 1})).status_code == 404
-    assert (await api.delete(path)).status_code == 404
-    assert (await api.get('/products')).json()['items'] == []
-    assert (await create(api)).status_code == 409
+    fetched = await api.get(path)
+    patched = await api.patch(path, json={'stock': 1})
+    deleted_again = await api.delete(path)
+    listed = await api.get('/products')
+    recreated = await create(api)
+
+    assert fetched.status_code == 404
+    assert patched.status_code == 404
+    assert deleted_again.status_code == 404
+    assert listed.json()['items'] == []
+    assert recreated.status_code == 409
 
 
 async def test_lists_with_the_page_shape_and_applies_q_sort_and_pagination(
