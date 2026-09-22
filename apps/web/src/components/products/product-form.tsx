@@ -24,6 +24,7 @@ export type ProductFormValues = CreateProductInput
 
 interface Props {
   readonly defaultValues?: Partial<ProductFormValues>
+  readonly values?: ProductFormValues
   readonly submitLabel: string
   readonly onSubmit: (values: ProductFormValues) => Promise<unknown>
 }
@@ -50,11 +51,13 @@ const numberOrUndefined = (value: unknown) =>
 const numberOrNull = (value: unknown) =>
   typeof value === 'number' ? value : value === '' || value == null ? null : Number(value)
 
-export function ProductForm({ defaultValues, submitLabel, onSubmit }: Props) {
+export function ProductForm({ defaultValues, values, submitLabel, onSubmit }: Props) {
   const categories = useCategories()
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(createProductSchema),
     defaultValues: { description: '', category: '', ...defaultValues },
+    values,
+    resetOptions: { keepDirtyValues: true },
   })
   const { errors, isSubmitting } = form.formState
 
