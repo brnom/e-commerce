@@ -119,8 +119,8 @@ def to_decimal(value: float) -> Decimal:
     return Decimal(int(value)) if float(value).is_integer() else Decimal(repr(float(value)))
 
 
-def nullable[T](rule: Callable[[object], T]) -> Callable[[object], T | None]:
-    def validate(value: object) -> T | None:
+def nullable(rule: Callable[[object], object]) -> Callable[[object], object]:
+    def validate(value: object) -> object:
         return None if value is None else rule(value)
 
     return validate
