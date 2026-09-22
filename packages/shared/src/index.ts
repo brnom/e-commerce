@@ -49,7 +49,6 @@ export type {
   ImportTotals,
 } from './import/import.schema'
 export {
-  MAX_ITEM_QUANTITY,
   MAX_ORDER_ITEMS,
   cardNumberSchema,
   checkoutCustomerSchema,

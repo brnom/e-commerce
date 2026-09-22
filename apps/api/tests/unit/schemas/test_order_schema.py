@@ -82,11 +82,16 @@ def test_rejects_a_security_code_that_is_not_3_or_4_digits() -> None:
     assert failing_paths(with_card(cvc='12')) == ['card.cvc']
 
 
-@pytest.mark.parametrize('quantity', [0, 101])
-def test_rejects_a_quantity_out_of_range(quantity: int) -> None:
-    order = {**VALID, 'items': [{'productId': PRODUCT_A, 'quantity': quantity}]}
+def test_rejects_a_zero_quantity() -> None:
+    order = {**VALID, 'items': [{'productId': PRODUCT_A, 'quantity': 0}]}
 
     assert failing_paths(order) == ['items.0.quantity']
+
+
+def test_accepts_any_positive_quantity_because_stock_bounds_it() -> None:
+    order = {**VALID, 'items': [{'productId': PRODUCT_A, 'quantity': 100_000}]}
+
+    assert failing_paths(order) == []
 
 
 def test_rejects_an_empty_order_and_one_with_too_many_items() -> None:

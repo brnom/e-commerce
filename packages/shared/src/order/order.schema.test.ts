@@ -84,12 +84,12 @@ describe('placeOrderSchema', () => {
     expect(failingPaths(placeOrderSchema.safeParse(withCard({ cvc: '12' })))).toEqual(['card.cvc'])
   })
 
-  it('rejects a quantity out of range', () => {
+  it('rejects a zero quantity and accepts any positive one, which stock bounds', () => {
     const zero = { ...valid, items: [{ productId: productA, quantity: 0 }] }
-    const tooMany = { ...valid, items: [{ productId: productA, quantity: 101 }] }
+    const large = { ...valid, items: [{ productId: productA, quantity: 100_000 }] }
 
     expect(failingPaths(placeOrderSchema.safeParse(zero))).toEqual(['items.0.quantity'])
-    expect(failingPaths(placeOrderSchema.safeParse(tooMany))).toEqual(['items.0.quantity'])
+    expect(placeOrderSchema.safeParse(large).success).toBe(true)
   })
 
   it('rejects an empty order and one with too many items', () => {

@@ -1,15 +1,13 @@
 import { z } from 'zod'
 
 export const MAX_ORDER_ITEMS = 50
-export const MAX_ITEM_QUANTITY = 100
 
 export const orderItemSchema = z.object({
   productId: z.uuid({ error: 'Product id must be a uuid' }),
   quantity: z
     .number({ error: 'Quantity must be a number' })
     .int('Quantity must be a whole number')
-    .min(1, 'Quantity must be at least 1')
-    .max(MAX_ITEM_QUANTITY, `Quantity must be at most ${MAX_ITEM_QUANTITY}`),
+    .min(1, 'Quantity must be at least 1'),
 })
 
 export const checkoutCustomerSchema = z.object({
