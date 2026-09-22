@@ -1,12 +1,14 @@
-import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common'
+import { ArgumentMetadata, BadRequestException, Injectable, PipeTransform } from '@nestjs/common'
 import { ZodType } from 'zod'
 
 @Injectable()
-export class ZodValidationPipe<T> implements PipeTransform<unknown, T> {
-  constructor(private readonly schema: ZodType<T>) {}
-
-  transform(value: unknown): T {
-    const result = this.schema.safeParse(value)
+export class ZodValidationPipe implements PipeTransform<unknown, unknown> {
+  transform(value: unknown, metadata: ArgumentMetadata): unknown {
+    const schema = metadata.schema as ZodType | undefined
+    if (!schema) {
+      throw new Error(`The ${metadata.type} parameter was declared without a schema`)
+    }
+    const result = schema.safeParse(value)
     if (result.success) {
       return result.data
     }

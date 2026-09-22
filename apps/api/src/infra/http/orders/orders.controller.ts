@@ -18,7 +18,9 @@ export class OrdersController {
   ) {}
 
   @Post()
-  place(@Body(new ZodValidationPipe(placeOrderSchema)) body: PlaceOrderInput): Promise<Order> {
+  place(
+    @Body({ schema: placeOrderSchema, pipes: [ZodValidationPipe] }) body: PlaceOrderInput,
+  ): Promise<Order> {
     return this.placeOrder.execute(body)
   }
 
