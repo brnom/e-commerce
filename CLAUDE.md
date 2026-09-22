@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A pnpm/Turborepo monorepo (Node 24, pnpm 10.32.1): `apps/api` (NestJS 12 + Prisma 7 on PostgreSQL 16), `apps/web` (Next.js 16 App Router, client-side rendered, TanStack Query, Tailwind v4 + shadcn/ui) and `packages/shared` (zod schemas and types consumed by both apps). `README.md` is the product-level document: run instructions, env vars, every architectural decision with the alternatives that were rejected, and the CSV import contract. Read it before changing behavior.
+A pnpm/Turborepo monorepo (Node 26, pnpm 10.32.1): `apps/api` (NestJS 12 + Prisma 7 on PostgreSQL 16), `apps/web` (Next.js 16 App Router, client-side rendered, TanStack Query, Tailwind v4 + shadcn/ui) and `packages/shared` (zod schemas and types consumed by both apps). `README.md` is the product-level document: run instructions, env vars, every architectural decision with the alternatives that were rejected, and the CSV import contract. Read it before changing behavior.
 
 ## Commands
 
