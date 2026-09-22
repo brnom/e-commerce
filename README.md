@@ -258,6 +258,14 @@ Dependencies are watched by Dependabot (npm, GitHub Actions and both Dockerfiles
 | `purchase`             | archived | cart, checkout, orders API with stock reservation, fake payment                         |
 | `purchase-ux`          | archived | one-click checkout with test-card selector, steppers, confirmed removal, pressed states |
 
+Three smaller changes shipped after `purchase-ux` as plain pull requests. None of them added behavior worth a spec, so none got an OpenSpec change of its own:
+
+| Change                  | State     | Delivers                                                                      |
+| ----------------------- | --------- | ----------------------------------------------------------------------------- |
+| `demo-recordings`       | merged    | the two GIFs in [Demo](#demo)                                                 |
+| `env-driven-ports`      | merged    | `API_PORT` and `WEB_PORT` read from the environment by `pnpm dev` and Compose |
+| `ui-interaction-states` | in review | hover, press and focus feedback in every control                              |
+
 ## License
 
 [Apache License 2.0](LICENSE). The sample CSV under `data/` is test data, not product data.

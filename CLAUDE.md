@@ -64,7 +64,7 @@ Enforced by `eslint.config.mjs`; violations fail `pnpm check`:
 
 ## Workflow conventions
 
-- Work is planned with OpenSpec (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`; CLI `openspec`). Each change under `openspec/changes/<name>/` has proposal, design, spec deltas and tasks; archived changes go to `openspec/changes/archive/YYYY-MM-DD-<name>/` and the merged behavior contract is `openspec/specs/`. When adding a change, update the README "Decisions" and "Status" sections.
+- Work is planned with OpenSpec (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`; CLI `openspec`). Each change under `openspec/changes/<name>/` has proposal, design, spec deltas and tasks; archived changes go to `openspec/changes/archive/YYYY-MM-DD-<name>/` and the merged behavior contract is `openspec/specs/`. When adding a change, update the README "Decisions" and "Status" sections. A change with no new behavior to specify — a README edit, a default that moves to the environment, a visual pass over existing controls — ships as a plain PR and is listed in the second table under README "Status" instead.
 - Flow per change: propose → apply on a `feat/<name>` branch → PR to `main` with granular conventional commits → merge → archive (spec sync + README status) committed directly on `main`.
 - Everything committed to the repository — code, specs, docs, commit messages — is written in English. Conversation with the maintainer is in Portuguese. Do not describe the project as an assessment or challenge anywhere except the paragraph already in `README.md`.
 - `data/e-commerce_input.csv` is a fixture asserted by `apps/api/test/imports.integration.test.ts` (87 created / 2 skipped / 8 failed); do not edit it.
