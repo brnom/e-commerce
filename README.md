@@ -75,19 +75,35 @@ Some lint rules are worth knowing about:
 
 ## Environment variables
 
-Defaults work for local development and for Compose. A committed `.env.example` documents every variable.
+Defaults work for local development and for Compose.
 
-| Variable              | Used by      | Default                                              | Purpose                                              |
-| --------------------- | ------------ | ---------------------------------------------------- | ---------------------------------------------------- |
-| `DATABASE_URL`        | api          | `postgresql://app:app@localhost:5432/ecommerce`      | PostgreSQL connection string. Required.              |
-| `TEST_DATABASE_URL`   | api (tests)  | `postgresql://app:app@localhost:5432/ecommerce_test` | Database the integration tests recreate and migrate. |
-| `API_PORT`            | api, compose | `5001`                                               | HTTP port the API listens on.                        |
-| `WEB_PORT`            | web, compose | `3005`                                               | HTTP port the web app listens on.                    |
-| `WEB_ORIGIN`          | api          | `http://localhost:3005`                              | Origin allowed by CORS.                              |
-| `NEXT_PUBLIC_API_URL` | web          | `http://localhost:5001`                              | API base URL as seen from the browser. Build-time.   |
-| `POSTGRES_USER`       | compose (db) | `app`                                                | Database user.                                       |
-| `POSTGRES_PASSWORD`   | compose (db) | `app`                                                | Database password.                                   |
-| `POSTGRES_DB`         | compose (db) | `ecommerce`                                          | Database name.                                       |
+| Variable              | Used by      | Purpose                                              |
+| --------------------- | ------------ | ---------------------------------------------------- |
+| `DATABASE_URL`        | api          | PostgreSQL connection string. Required.              |
+| `TEST_DATABASE_URL`   | api (tests)  | Database the integration tests recreate and migrate. |
+| `API_PORT`            | api, compose | HTTP port the API listens on.                        |
+| `WEB_PORT`            | web, compose | HTTP port the web app listens on.                    |
+| `WEB_ORIGIN`          | api          | Origin allowed by CORS.                              |
+| `NEXT_PUBLIC_API_URL` | web          | API base URL as seen from the browser. Build-time.   |
+| `POSTGRES_USER`       | compose (db) | Database user.                                       |
+| `POSTGRES_PASSWORD`   | compose (db) | Database password.                                   |
+| `POSTGRES_DB`         | compose (db) | Database name.                                       |
+
+The defaults, as committed in `.env.example`:
+
+```bash
+POSTGRES_USER=app
+POSTGRES_PASSWORD=app
+POSTGRES_DB=ecommerce
+
+DATABASE_URL=postgresql://app:app@localhost:5432/ecommerce
+TEST_DATABASE_URL=postgresql://app:app@localhost:5432/ecommerce_test
+API_PORT=5001
+WEB_PORT=3005
+WEB_ORIGIN=http://localhost:3005
+
+NEXT_PUBLIC_API_URL=http://localhost:5001
+```
 
 The API validates its environment at startup and exits with a non-zero status naming any missing or malformed variable.
 
@@ -97,29 +113,32 @@ Both ports come from the environment, so moving the stack is an edit to `.env` a
 
 ```
 apps/
-  api/                 Python REST API (FastAPI), managed with uv
-    src/ecommerce_api/domain/       entities, value objects, domain errors (plain Python)
-    src/ecommerce_api/application/  ports (Protocols), use cases and the Pydantic input models
-    src/ecommerce_api/infra/        FastAPI app and routers, error handlers, SQLAlchemy Core repositories, fake payment gateway, env config
-    src/ecommerce_api/__main__.py   entry point: reads the environment and runs uvicorn
-    migrations/        Alembic revisions, each running one SQL file from migrations/sql/
-    tests/             pytest: unit/ with in-memory fakes, integration/ against PostgreSQL
-  web/                 Next.js App Router application, client-side rendered
-    src/app/           routes (/, /products, /products/new, /products/[id], /products/[id]/edit, /imports, /imports/[id], /cart, /checkout, /orders, /orders/[id]), globals.css tokens
-    src/components/ui/ shadcn/ui components (generated, then owned)
-    src/components/layout/ header, footer, page header
-    src/components/products/ table, filters, form, detail page, delete dialog, states
-    src/components/imports/  upload card, import history, per-row report
-    src/components/cart/     add-to-cart button, header cart link, cart page, checkout page
-    src/components/orders/   order history, order page, status badge
-    src/lib/           API client, typed product/import/order endpoints, URL state for the list, browser cart store, fonts
-    src/fonts/         vendored Archivo (display); Geist comes from the `geist` package
+  api/                  Python REST API (FastAPI), managed with uv
+    src/ecommerce_api/
+      domain/           entities, value objects, domain errors (plain Python)
+      application/      ports (Protocols), use cases, Pydantic input models
+      infra/            FastAPI app, routers, error handlers, SQLAlchemy Core repositories, fake payment gateway, env config
+      __main__.py       entry point: reads the environment and runs uvicorn
+    migrations/         Alembic revisions, each running one SQL file from migrations/sql/
+    scripts/            check_sources.py, the no-comments rule for Python
+    tests/              pytest: unit/ with in-memory fakes, integration/ against PostgreSQL
+  web/                  Next.js App Router application, client-side rendered
+    src/app/            routes: /, /products, /imports, /cart, /checkout, /orders and their detail pages; globals.css tokens
+    src/components/
+      ui/               shadcn/ui components (generated, then owned)
+      layout/           header, footer, page header
+      products/         table, filters, form, detail page, delete dialog, states
+      imports/          upload card, import history, per-row report
+      cart/             add-to-cart button, header cart link, cart page, checkout page
+      orders/           order history, order page, status badge
+    src/lib/            API client, typed product/import/order endpoints, URL state for the list, browser cart store, fonts
+    src/fonts/          vendored Archivo (display); Geist comes from the `geist` package
 packages/
-  shared/              zod schemas and TypeScript types used by the web app, and validation-cases/ run by both test suites
-data/                  sample product CSV used by the import's integration test
-docs/                  demo recordings used by this file
-openspec/              change proposals, designs, specs and task lists (spec-driven workflow)
-docker-compose.yml     db + api + web
+  shared/               zod schemas and TypeScript types used by the web app; validation-cases/ run by both test suites
+data/                   sample product CSV used by the import's integration test
+docs/                   demo recordings used by this file
+openspec/               change proposals, designs, specs and task lists (spec-driven workflow)
+docker-compose.yml      db + api + web
 ```
 
 ## API
@@ -150,7 +169,7 @@ Ids are uuid v7. Prices are plain numbers in JSON and `Decimal` in the database.
 
 Each change in this repository was planned before it was built: `openspec/changes/<name>/` holds a proposal (why), a design (how, with alternatives considered), a spec delta (what the system must do, as testable scenarios) and a task list. Archived changes live in `openspec/changes/archive/`, and the accumulated behavior contract lives in `openspec/specs/`.
 
-The architectural choices, with the alternatives that were weighed, are in each change's `design.md`: [`scaffold-monorepo`](openspec/changes/archive/2026-09-20-scaffold-monorepo/design.md), [`products-crud-search`](openspec/changes/archive/2026-09-21-products-crud-search/design.md), [`web-design-system`](openspec/changes/archive/2026-09-21-web-design-system/design.md), [`csv-import`](openspec/changes/archive/2026-09-21-csv-import/design.md), [`purchase`](openspec/changes/archive/2026-09-22-purchase/design.md) and [`purchase-ux`](openspec/changes/archive/2026-09-22-purchase-ux/design.md) and [`migrate-api-to-python`](openspec/changes/migrate-api-to-python/design.md). In short:
+The architectural choices, with the alternatives that were weighed, are in each change's `design.md`: [`scaffold-monorepo`](openspec/changes/archive/2026-09-20-scaffold-monorepo/design.md), [`products-crud-search`](openspec/changes/archive/2026-09-21-products-crud-search/design.md), [`web-design-system`](openspec/changes/archive/2026-09-21-web-design-system/design.md), [`csv-import`](openspec/changes/archive/2026-09-21-csv-import/design.md), [`purchase`](openspec/changes/archive/2026-09-22-purchase/design.md), [`purchase-ux`](openspec/changes/archive/2026-09-22-purchase-ux/design.md) and [`migrate-api-to-python`](openspec/changes/archive/2026-09-22-migrate-api-to-python/design.md). In short:
 
 **Foundation**
 
@@ -255,24 +274,25 @@ Dependencies are watched by Dependabot (npm, uv, GitHub Actions and both Dockerf
 
 ## Status
 
-| Change                  | State     | Delivers                                                                                |
-| ----------------------- | --------- | --------------------------------------------------------------------------------------- |
-| `scaffold-monorepo`     | archived  | monorepo, API + web skeletons, Postgres, Docker, CI, this file                          |
-| `products-crud-search`  | archived  | `Product`/`Category` model, CRUD API, list + search + form UI                           |
-| `web-design-system`     | archived  | Tailwind + shadcn/ui, black-and-white typographic UI, detail page                       |
-| `csv-import`            | archived  | CSV upload, per-row validation report, upsert by SKU                                    |
-| `purchase`              | archived  | cart, checkout, orders API with stock reservation, fake payment                         |
-| `purchase-ux`           | archived  | one-click checkout with test-card selector, steppers, confirmed removal, pressed states |
-| `migrate-api-to-python` | in review | the API rewritten in Python (FastAPI, SQLAlchemy Core, Alembic) with the same contract  |
+| Change                  | State    | Delivers                                                                                |
+| ----------------------- | -------- | --------------------------------------------------------------------------------------- |
+| `scaffold-monorepo`     | archived | monorepo, API + web skeletons, Postgres, Docker, CI, this file                          |
+| `products-crud-search`  | archived | `Product`/`Category` model, CRUD API, list + search + form UI                           |
+| `web-design-system`     | archived | Tailwind + shadcn/ui, black-and-white typographic UI, detail page                       |
+| `csv-import`            | archived | CSV upload, per-row validation report, upsert by SKU                                    |
+| `purchase`              | archived | cart, checkout, orders API with stock reservation, fake payment                         |
+| `purchase-ux`           | archived | one-click checkout with test-card selector, steppers, confirmed removal, pressed states |
+| `migrate-api-to-python` | archived | the API rewritten in Python (FastAPI, SQLAlchemy Core, Alembic) with the same contract  |
 
-Four smaller changes shipped after `purchase-ux` as plain pull requests. None of them added behavior worth a spec, so none got an OpenSpec change of its own:
+Five smaller changes shipped as plain pull requests. None of them added behavior worth a spec, so none got an OpenSpec change of its own:
 
-| Change                  | State     | Delivers                                                                      |
-| ----------------------- | --------- | ----------------------------------------------------------------------------- |
-| `demo-recordings`       | merged    | the two GIFs in [Demo](#demo)                                                 |
-| `env-driven-ports`      | merged    | `API_PORT` and `WEB_PORT` read from the environment by `pnpm dev` and Compose |
-| `ui-interaction-states` | in review | hover, press and focus feedback in every control                              |
-| `api-openapi-docs`      | in review | Swagger UI at `/docs`, generated from the routes and the validation schemas   |
+| Change                  | State  | Delivers                                                                      |
+| ----------------------- | ------ | ----------------------------------------------------------------------------- |
+| `demo-recordings`       | merged | the two GIFs in [Demo](#demo)                                                 |
+| `env-driven-ports`      | merged | `API_PORT` and `WEB_PORT` read from the environment by `pnpm dev` and Compose |
+| `ui-interaction-states` | merged | hover, press and focus feedback in every control                              |
+| `api-openapi-docs`      | merged | Swagger UI at `/docs`, generated from the routes and the validation schemas   |
+| `node-26`               | merged | Node 26 in development, CI and the web image                                  |
 
 ## License
 
