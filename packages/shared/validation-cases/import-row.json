@@ -1,0 +1,69 @@
+{
+  "base": { "name": "Running Shoes", "sku": "rs-001", "price": "89.99", "stock": "150" },
+  "cases": [
+    { "name": "accepts plain decimal cells", "patch": { "weight_kg": "0.35" }, "issues": [] },
+    {
+      "name": "accepts blank optional cells",
+      "patch": { "description": "", "category": " ", "weight_kg": "" },
+      "issues": []
+    },
+    {
+      "name": "rejects a price with a currency symbol",
+      "patch": { "price": "$29.99" },
+      "issues": [{ "path": "price", "message": "Price must be a number" }]
+    },
+    {
+      "name": "rejects a word as the price",
+      "patch": { "price": "free" },
+      "issues": [{ "path": "price", "message": "Price must be a number" }]
+    },
+    {
+      "name": "rejects a thousands separator",
+      "patch": { "price": "1,000" },
+      "issues": [{ "path": "price", "message": "Price must be a number" }]
+    },
+    {
+      "name": "rejects a blank price",
+      "patch": { "price": "" },
+      "issues": [{ "path": "price", "message": "Price must be a number" }]
+    },
+    {
+      "name": "rejects negative stock",
+      "patch": { "stock": "-5" },
+      "issues": [{ "path": "stock", "message": "Stock must be zero or more" }]
+    },
+    {
+      "name": "rejects fractional stock",
+      "patch": { "stock": "1.5" },
+      "issues": [{ "path": "stock", "message": "Stock must be a whole number" }]
+    },
+    {
+      "name": "rejects an empty name",
+      "patch": { "name": "" },
+      "issues": [{ "path": "name", "message": "Name is required" }]
+    },
+    {
+      "name": "rejects a whitespace name",
+      "patch": { "name": "   " },
+      "issues": [{ "path": "name", "message": "Name is required" }]
+    },
+    {
+      "name": "rejects a blank sku",
+      "patch": { "sku": "" },
+      "issues": [{ "path": "sku", "message": "SKU is required" }]
+    },
+    {
+      "name": "rejects a word as the weight",
+      "patch": { "weight_kg": "heavy" },
+      "issues": [{ "path": "weightKg", "message": "Weight must be a number" }]
+    },
+    {
+      "name": "reports every failing cell of a row",
+      "patch": { "name": "", "stock": "-5" },
+      "issues": [
+        { "path": "name", "message": "Name is required" },
+        { "path": "stock", "message": "Stock must be zero or more" }
+      ]
+    }
+  ]
+}

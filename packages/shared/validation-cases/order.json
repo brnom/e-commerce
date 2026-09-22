@@ -1,0 +1,122 @@
+{
+  "base": {
+    "items": [{ "productId": "019968c2-4d6e-7c2a-9d1e-0a1b2c3d4e5f", "quantity": 2 }],
+    "customer": { "name": "Ada Lovelace", "email": "ada@example.com" },
+    "card": {
+      "cardholderName": "Ada Lovelace",
+      "cardNumber": "4242 4242 4242 4242",
+      "expiry": "12/99",
+      "cvc": "123"
+    }
+  },
+  "cases": [
+    { "name": "accepts a valid order", "patch": {}, "issues": [] },
+    {
+      "name": "accepts an email surrounded by spaces",
+      "patch": { "customer": { "email": " ada@example.com " } },
+      "issues": []
+    },
+    {
+      "name": "rejects a card number failing the Luhn check",
+      "patch": { "card": { "cardNumber": "4242 4242 4242 4241" } },
+      "issues": [{ "path": "card.cardNumber", "message": "Card number is not valid" }]
+    },
+    {
+      "name": "rejects a card number that is too short",
+      "patch": { "card": { "cardNumber": "1234" } },
+      "issues": [{ "path": "card.cardNumber", "message": "Card number must be 13 to 19 digits" }]
+    },
+    {
+      "name": "rejects an expired card",
+      "patch": { "card": { "expiry": "01/20" } },
+      "issues": [{ "path": "card.expiry", "message": "Card has expired" }]
+    },
+    {
+      "name": "rejects a malformed expiry",
+      "patch": { "card": { "expiry": "13/30" } },
+      "issues": [{ "path": "card.expiry", "message": "Expiry must be MM/YY" }]
+    },
+    {
+      "name": "accepts the current month",
+      "now": "2026-09-21T12:00:00",
+      "patch": { "card": { "expiry": "09/26" } },
+      "issues": []
+    },
+    {
+      "name": "rejects the previous month",
+      "now": "2026-09-21T12:00:00",
+      "patch": { "card": { "expiry": "08/26" } },
+      "issues": [{ "path": "card.expiry", "message": "Card has expired" }]
+    },
+    {
+      "name": "rejects a security code of two digits",
+      "patch": { "card": { "cvc": "12" } },
+      "issues": [{ "path": "card.cvc", "message": "Security code must be 3 or 4 digits" }]
+    },
+    {
+      "name": "rejects a zero quantity",
+      "patch": {
+        "items": [{ "productId": "019968c2-4d6e-7c2a-9d1e-0a1b2c3d4e5f", "quantity": 0 }]
+      },
+      "issues": [{ "path": "items.0.quantity", "message": "Quantity must be at least 1" }]
+    },
+    {
+      "name": "rejects a quantity above the limit",
+      "patch": {
+        "items": [{ "productId": "019968c2-4d6e-7c2a-9d1e-0a1b2c3d4e5f", "quantity": 101 }]
+      },
+      "issues": [{ "path": "items.0.quantity", "message": "Quantity must be at most 100" }]
+    },
+    {
+      "name": "rejects a fractional quantity",
+      "patch": {
+        "items": [{ "productId": "019968c2-4d6e-7c2a-9d1e-0a1b2c3d4e5f", "quantity": 1.5 }]
+      },
+      "issues": [{ "path": "items.0.quantity", "message": "Quantity must be a whole number" }]
+    },
+    {
+      "name": "rejects a product id that is not a uuid",
+      "patch": { "items": [{ "productId": "abc", "quantity": 1 }] },
+      "issues": [{ "path": "items.0.productId", "message": "Product id must be a uuid" }]
+    },
+    {
+      "name": "rejects an empty order",
+      "patch": { "items": [] },
+      "issues": [{ "path": "items", "message": "The order must have at least one item" }]
+    },
+    {
+      "name": "rejects the same product twice",
+      "patch": {
+        "items": [
+          { "productId": "019968c2-4d6e-7c2a-9d1e-0a1b2c3d4e5f", "quantity": 1 },
+          { "productId": "019968c2-4d6e-7c2a-9d1e-0a1b2c3d4e60", "quantity": 1 },
+          { "productId": "019968c2-4d6e-7c2a-9d1e-0a1b2c3d4e5f", "quantity": 3 }
+        ]
+      },
+      "issues": [{ "path": "items", "message": "Each product may appear only once" }]
+    },
+    {
+      "name": "rejects an invalid email",
+      "patch": { "customer": { "email": "not-an-email" } },
+      "issues": [{ "path": "customer.email", "message": "Enter a valid email address" }]
+    },
+    {
+      "name": "rejects a missing card",
+      "input": {
+        "items": [{ "productId": "019968c2-4d6e-7c2a-9d1e-0a1b2c3d4e5f", "quantity": 2 }],
+        "customer": { "name": "Ada Lovelace", "email": "ada@example.com" }
+      },
+      "issues": [
+        { "path": "card", "message": "Invalid input: expected object, received undefined" }
+      ]
+    },
+    {
+      "name": "reports every failing field together",
+      "patch": { "customer": { "name": "  " }, "card": { "cvc": "12" } },
+      "issues": [
+        { "path": "customer.name", "message": "Name is required" },
+        { "path": "card.cvc", "message": "Security code must be 3 or 4 digits" }
+      ]
+    }
+  ]
+}

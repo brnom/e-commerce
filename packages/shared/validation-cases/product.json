@@ -1,0 +1,111 @@
+{
+  "base": { "sku": "RS-001", "name": "Running Shoes", "price": 89.99, "stock": 150 },
+  "cases": [
+    { "name": "accepts the minimal product", "patch": {}, "issues": [] },
+    {
+      "name": "accepts null optional fields",
+      "patch": { "description": null, "weightKg": null, "category": null },
+      "issues": []
+    },
+    { "name": "accepts a zero price", "patch": { "price": 0 }, "issues": [] },
+    {
+      "name": "accepts every optional field",
+      "patch": { "description": "Light", "weightKg": 0.35, "category": "Footwear" },
+      "issues": []
+    },
+    {
+      "name": "rejects a blank name",
+      "patch": { "name": "   " },
+      "issues": [{ "path": "name", "message": "Name is required" }]
+    },
+    {
+      "name": "rejects a missing sku",
+      "input": { "name": "Running Shoes", "price": 89.99, "stock": 150 },
+      "issues": [{ "path": "sku", "message": "SKU is required" }]
+    },
+    {
+      "name": "rejects a sku longer than 64 characters",
+      "patch": { "sku": "SKU-0123456789012345678901234567890123456789012345678901234567890" },
+      "issues": [{ "path": "sku", "message": "SKU must be at most 64 characters" }]
+    },
+    {
+      "name": "rejects a price with a currency symbol",
+      "patch": { "price": "$29.99" },
+      "issues": [{ "path": "price", "message": "Price must be a number" }]
+    },
+    {
+      "name": "rejects a numeric string as the price",
+      "patch": { "price": "29.99" },
+      "issues": [{ "path": "price", "message": "Price must be a number" }]
+    },
+    {
+      "name": "rejects a boolean as the price",
+      "patch": { "price": true },
+      "issues": [{ "path": "price", "message": "Price must be a number" }]
+    },
+    {
+      "name": "rejects a missing price",
+      "input": { "sku": "RS-001", "name": "Running Shoes", "stock": 150 },
+      "issues": [{ "path": "price", "message": "Price must be a number" }]
+    },
+    {
+      "name": "rejects a price with three decimal places",
+      "patch": { "price": 29.999 },
+      "issues": [{ "path": "price", "message": "Price allows at most two decimal places" }]
+    },
+    {
+      "name": "reports both problems of a negative price with three decimal places",
+      "patch": { "price": -1.234 },
+      "issues": [
+        { "path": "price", "message": "Price must be zero or more" },
+        { "path": "price", "message": "Price allows at most two decimal places" }
+      ]
+    },
+    {
+      "name": "rejects a price that is too large",
+      "patch": { "price": 100000000000 },
+      "issues": [{ "path": "price", "message": "Price is too large" }]
+    },
+    {
+      "name": "rejects negative stock",
+      "patch": { "stock": -5 },
+      "issues": [{ "path": "stock", "message": "Stock must be zero or more" }]
+    },
+    {
+      "name": "rejects fractional stock",
+      "patch": { "stock": 1.5 },
+      "issues": [{ "path": "stock", "message": "Stock must be a whole number" }]
+    },
+    {
+      "name": "rejects a weight with four decimal places",
+      "patch": { "weightKg": 0.1234 },
+      "issues": [{ "path": "weightKg", "message": "Weight allows at most three decimal places" }]
+    },
+    {
+      "name": "rejects a negative weight",
+      "patch": { "weightKg": -1 },
+      "issues": [{ "path": "weightKg", "message": "Weight must be zero or more" }]
+    },
+    {
+      "name": "rejects a blank category",
+      "patch": { "category": "  " },
+      "issues": [{ "path": "category", "message": "Category name must not be blank" }]
+    },
+    {
+      "name": "rejects a number as the description",
+      "patch": { "description": 5 },
+      "issues": [
+        { "path": "description", "message": "Invalid input: expected string, received number" }
+      ]
+    },
+    {
+      "name": "reports every invalid field in field order",
+      "patch": { "name": "", "price": "$29.99", "stock": -1 },
+      "issues": [
+        { "path": "name", "message": "Name is required" },
+        { "path": "price", "message": "Price must be a number" },
+        { "path": "stock", "message": "Stock must be zero or more" }
+      ]
+    }
+  ]
+}
