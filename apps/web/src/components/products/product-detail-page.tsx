@@ -1,5 +1,6 @@
 'use client'
 
+import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -10,9 +11,9 @@ import { ProductNotFound } from './product-not-found'
 import { ErrorState } from './states'
 import { isNotFound, useProduct } from './use-product'
 import { AddToCartButton } from '@/components/cart/add-to-cart-button'
+import { QuantityStepper } from '@/components/cart/quantity-stepper'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -44,30 +45,46 @@ function SpecSheet({ product }: { readonly product: ProductResponse }) {
 }
 
 function BuyBox({ product }: { readonly product: ProductResponse }) {
-  const [raw, setRaw] = useState('1')
-  const max = Math.max(product.stock, 1)
-  const quantity = Math.min(Math.max(Number.parseInt(raw, 10) || 1, 1), max)
+  const [quantity, setQuantity] = useState(1)
+  const [addedOnce, setAddedOnce] = useState(false)
+  const outOfStock = product.stock < 1
   return (
-    <div className="flex flex-col gap-3 rounded-lg border p-4">
-      <div className="flex items-end gap-3">
+    <div className="flex flex-col gap-4 rounded-lg border p-4">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="quantity">Quantity</Label>
-          <Input
-            id="quantity"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={max}
-            value={raw}
-            disabled={product.stock < 1}
-            onChange={(event) => setRaw(event.target.value)}
-            onBlur={() => setRaw(String(quantity))}
-            className="w-24 font-mono tabular-nums"
-          />
+          {outOfStock ? (
+            <p className="font-mono text-sm text-muted-foreground">—</p>
+          ) : (
+            <QuantityStepper
+              id="quantity"
+              name={product.name}
+              value={quantity}
+              max={product.stock}
+              onChange={setQuantity}
+            />
+          )}
         </div>
-        <p className="pb-2 font-mono text-xs text-muted-foreground">{product.stock} in stock</p>
+        <p className="self-end pb-2 font-mono text-xs text-muted-foreground tabular-nums">
+          {product.stock} in stock
+        </p>
       </div>
-      <AddToCartButton product={product} quantity={quantity} size="lg" />
+      <AddToCartButton
+        product={product}
+        quantity={quantity}
+        size="lg"
+        className="w-full"
+        onAdded={() => setAddedOnce(true)}
+      />
+      {addedOnce && (
+        <Link
+          href="/cart"
+          className="inline-flex animate-in items-center gap-1 self-center text-sm underline-offset-4 fade-in hover:underline"
+        >
+          View cart
+          <ArrowRight className="size-4" />
+        </Link>
+      )}
     </div>
   )
 }

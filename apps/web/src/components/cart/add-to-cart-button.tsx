@@ -1,10 +1,11 @@
 'use client'
 
-import { ShoppingCart } from 'lucide-react'
+import { Check, ShoppingCart } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { cartStore, type CartProduct } from '@/lib/cart-store'
+import { cn } from '@/lib/utils'
 
 import type { ComponentProps } from 'react'
 
@@ -16,7 +17,10 @@ interface Props extends Omit<ComponentProps<typeof Button>, 'onClick' | 'disable
 
 const ADDED_FEEDBACK_MS = 1500
 
-export function AddToCartButton({ product, quantity = 1, onAdded, ...rest }: Props) {
+const addedStyle =
+  'border-foreground bg-foreground text-background hover:bg-foreground hover:text-background active:bg-foreground'
+
+export function AddToCartButton({ product, quantity = 1, onAdded, className, ...rest }: Props) {
   const [added, setAdded] = useState(false)
   const outOfStock = product.stock < 1
 
@@ -30,7 +34,9 @@ export function AddToCartButton({ product, quantity = 1, onAdded, ...rest }: Pro
     <Button
       type="button"
       disabled={outOfStock}
+      data-added={added || undefined}
       aria-label={outOfStock ? `Out of stock: ${product.name}` : `Add ${product.name} to cart`}
+      className={cn(added && addedStyle, className)}
       onClick={() => {
         cartStore.add(product, quantity)
         setAdded(true)
@@ -38,8 +44,17 @@ export function AddToCartButton({ product, quantity = 1, onAdded, ...rest }: Pro
       }}
       {...rest}
     >
-      <ShoppingCart />
-      {outOfStock ? 'Out of stock' : added ? 'Added' : 'Add to cart'}
+      {added ? (
+        <span key="added" className="inline-flex animate-in items-center gap-2 zoom-in-95 fade-in">
+          <Check />
+          Added
+        </span>
+      ) : (
+        <span key="idle" className="inline-flex items-center gap-2">
+          <ShoppingCart />
+          {outOfStock ? 'Out of stock' : 'Add to cart'}
+        </span>
+      )}
     </Button>
   )
 }
