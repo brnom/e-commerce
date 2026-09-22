@@ -1,12 +1,12 @@
 # <img src="apps/web/src/app/icon.svg" alt="" width="24" height="24"> E-commerce
 
-A small e-commerce platform: a product catalog with search, bulk import from CSV, and a purchase flow with a simulated payment provider. It is built as a pnpm monorepo with a NestJS API, a Next.js web app and PostgreSQL, and runs end to end with one `docker compose up`.
+A small e-commerce platform: a product catalog with search, bulk import from CSV, and a purchase flow with a simulated payment provider. It is built as a monorepo with a Python API (FastAPI), a Next.js web app and PostgreSQL, and runs end to end with one `docker compose up`.
 
 This repository was built for a technical assessment. The functional brief (product CRUD, CSV import, search, purchase with a fake payment, a UI for all of it, Docker, local DB) is treated here as the product requirements of a real system, and the reasoning behind each decision is recorded in [Decisions](#decisions) and in the `openspec/` directory.
 
 ## Demo
 
-Both recordings are of the running stack: the Next.js app on `localhost:3005` talking to the NestJS API on `localhost:5001`.
+Both recordings are of the running stack: the Next.js app on `localhost:3005` talking to the API on `localhost:5001`. They were recorded before the API moved from NestJS to Python; the HTTP contract, and so every screen, is the same.
 
 **Catalog — search, filter and create a product.** A search with no match shows the empty state, the category select filters the list, a row opens the product page, and the form creates the product that was missing.
 
@@ -19,7 +19,7 @@ Both recordings are of the running stack: the Next.js app on `localhost:3005` ta
 ## Prerequisites
 
 - Docker Desktop (or Docker Engine 24+ with the Compose plugin) to run the stack.
-- For local development additionally: Node 26 and pnpm 10 (`npm install --global pnpm@10.32.1`).
+- For local development additionally: Node 26 and pnpm 10 (`npm install --global pnpm@10.32.1`) for the web app and the shared package, and Python 3.14 with [uv](https://docs.astral.sh/uv/) for the API (`brew install uv` or `curl -LsSf https://astral.sh/uv/install.sh | sh`; uv fetches Python 3.14 itself if it is missing).
 
 ## Run with Docker
 
@@ -33,6 +33,8 @@ Then open:
 - API health: http://localhost:5001/health
 
 The API applies pending database migrations before it starts listening; the database keeps its data in the `pgdata` volume across restarts. Use `docker compose down -v` to start from an empty database.
+
+**Upgrading from the NestJS API.** A `pgdata` volume created before the move to Python was migrated by Prisma, and Alembic will not adopt it: the API exits on its first migration. Run `docker compose down -v` once; the schema itself is unchanged.
 
 **The catalog starts empty.** Load the 97-row sample file, downloaded on **2026-09-17**, to get a populated store:
 
@@ -51,9 +53,9 @@ cp .env.example .env
 pnpm dev
 ```
 
-`pnpm dev` starts the API on port 5001 with hot reload and the web app on port 3005. The Prisma client is generated automatically as part of the Turborepo task graph. The API watcher does not reload `packages/shared`; after editing a shared schema, restart `pnpm dev`.
+`pnpm dev` starts the API on port 5001 with hot reload (`uv run python -m ecommerce_api --reload`, installing the Python dependencies on first run) and the web app on port 3005. Apply the migrations to the development database once with `pnpm db:migrate` (it reads `.env`), and again after pulling a new one.
 
-The API's integration tests run against a real PostgreSQL database, `ecommerce_test` on the same `db` container (`TEST_DATABASE_URL`). The test run creates that database if it is missing and applies the migrations, so `docker compose up db -d` is the only prerequisite for `pnpm test`. Unit tests need no database: `pnpm --filter api exec vitest run --project unit`.
+The API's integration tests run against a real PostgreSQL database, `ecommerce_test` on the same `db` container (`TEST_DATABASE_URL`). Each test run drops and recreates that database and applies the migrations, so `docker compose up db -d` is the only prerequisite for `pnpm test`. Unit tests need no database: `cd apps/api && uv run pytest tests/unit`.
 
 ## Quality gate
 
@@ -61,13 +63,13 @@ The API's integration tests run against a real PostgreSQL database, `ecommerce_t
 pnpm check
 ```
 
-Runs, for every workspace: ESLint, `tsc --noEmit`, Vitest, and a Prettier check. The same command runs in CI on every push and pull request (`.github/workflows/ci.yml`, with a PostgreSQL service for the integration tests), together with a build of both Docker images.
+Runs, for every workspace: ESLint, `tsc --noEmit` and Vitest for the web app and the shared package; Ruff (lint and format check), mypy in strict mode, import-linter and pytest for the API; and a Prettier check. The API's `package.json` only wraps those `uv run` commands, so Turborepo runs both languages the same way. The same command runs in CI on every push and pull request (`.github/workflows/ci.yml`, with a PostgreSQL service for the integration tests), together with a build of both Docker images.
 
-Two lint rules are worth knowing about:
+Some lint rules are worth knowing about:
 
-- **No comments in source files.** Intent is expected to live in names, types, tests and this document. The rule is enforced with `eslint-plugin-no-comments` on everything under `apps/*/src`, `apps/*/test` and `packages/*/src`.
-- **`@/` imports in the API.** `@/application/ports/config` instead of `../../application/ports/config`. The Nest CLI compiles with SWC so the alias is rewritten in the emitted JavaScript; `tsc --noEmit` still type-checks every build.
-- **Layer boundaries in the API.** `domain/` may not import `application/` or `infra/`; `application/` may not import `infra/` or any framework. Enforced with `no-restricted-imports`, so a violation fails `pnpm lint`.
+- **No comments in source files.** Intent is expected to live in names, types, tests and this document. In TypeScript the rule is `eslint-plugin-no-comments` on `apps/web/src` and `packages/*/src`; in the API, `apps/api/scripts/check_sources.py` rejects every `#` comment and docstring under `src/`, `tests/`, `migrations/` and `scripts/`, printing file and line.
+- **Absolute imports in the API.** `from ecommerce_api.application.ports.config import Config`, never a relative import (Ruff `TID252`).
+- **Layer boundaries in the API.** `domain/` may not import `application/` or `infra/`; `application/` may not import `infra/`, FastAPI, Starlette, SQLAlchemy, psycopg or Alembic; `domain/` may not import Pydantic either. Enforced with import-linter contracts in `apps/api/pyproject.toml`, so a violation fails `pnpm lint`.
 - **No `dangerouslySetInnerHTML` in the web app.** Product data (names, descriptions) is user-supplied and is always rendered as text; the attribute is rejected by `no-restricted-syntax`.
 - **Copied UI components are linted like everything else.** shadcn/ui components live in `apps/web/src/components/ui` and go through the same rules (including the no-comments rule) after generation.
 
@@ -75,17 +77,17 @@ Two lint rules are worth knowing about:
 
 Defaults work for local development and for Compose. A committed `.env.example` documents every variable.
 
-| Variable              | Used by      | Default                                              | Purpose                                            |
-| --------------------- | ------------ | ---------------------------------------------------- | -------------------------------------------------- |
-| `DATABASE_URL`        | api          | `postgresql://app:app@localhost:5432/ecommerce`      | PostgreSQL connection string. Required.            |
-| `TEST_DATABASE_URL`   | api (tests)  | `postgresql://app:app@localhost:5432/ecommerce_test` | Database the integration tests create and migrate. |
-| `API_PORT`            | api, compose | `5001`                                               | HTTP port the API listens on.                      |
-| `WEB_PORT`            | web, compose | `3005`                                               | HTTP port the web app listens on.                  |
-| `WEB_ORIGIN`          | api          | `http://localhost:3005`                              | Origin allowed by CORS.                            |
-| `NEXT_PUBLIC_API_URL` | web          | `http://localhost:5001`                              | API base URL as seen from the browser. Build-time. |
-| `POSTGRES_USER`       | compose (db) | `app`                                                | Database user.                                     |
-| `POSTGRES_PASSWORD`   | compose (db) | `app`                                                | Database password.                                 |
-| `POSTGRES_DB`         | compose (db) | `ecommerce`                                          | Database name.                                     |
+| Variable              | Used by      | Default                                              | Purpose                                              |
+| --------------------- | ------------ | ---------------------------------------------------- | ---------------------------------------------------- |
+| `DATABASE_URL`        | api          | `postgresql://app:app@localhost:5432/ecommerce`      | PostgreSQL connection string. Required.              |
+| `TEST_DATABASE_URL`   | api (tests)  | `postgresql://app:app@localhost:5432/ecommerce_test` | Database the integration tests recreate and migrate. |
+| `API_PORT`            | api, compose | `5001`                                               | HTTP port the API listens on.                        |
+| `WEB_PORT`            | web, compose | `3005`                                               | HTTP port the web app listens on.                    |
+| `WEB_ORIGIN`          | api          | `http://localhost:3005`                              | Origin allowed by CORS.                              |
+| `NEXT_PUBLIC_API_URL` | web          | `http://localhost:5001`                              | API base URL as seen from the browser. Build-time.   |
+| `POSTGRES_USER`       | compose (db) | `app`                                                | Database user.                                       |
+| `POSTGRES_PASSWORD`   | compose (db) | `app`                                                | Database password.                                   |
+| `POSTGRES_DB`         | compose (db) | `ecommerce`                                          | Database name.                                       |
 
 The API validates its environment at startup and exits with a non-zero status naming any missing or malformed variable.
 
@@ -95,13 +97,13 @@ Both ports come from the environment, so moving the stack is an edit to `.env` a
 
 ```
 apps/
-  api/                 NestJS REST API
-    src/domain/        entities, value objects, domain errors (no framework imports)
-    src/application/   ports (interfaces + injection tokens) and use cases, with in-memory fakes for tests
-    src/infra/         NestJS modules, HTTP controllers/pipes/filters, the OpenAPI document, Prisma adapters, fake payment gateway, env config
-    src/main.ts        bootstrap; with app.module.ts, the composition root
-    prisma/            schema and migrations
-    test/              integration tests that boot the Nest application
+  api/                 Python REST API (FastAPI), managed with uv
+    src/ecommerce_api/domain/       entities, value objects, domain errors (plain Python)
+    src/ecommerce_api/application/  ports (Protocols), use cases and the Pydantic input models
+    src/ecommerce_api/infra/        FastAPI app and routers, error handlers, SQLAlchemy Core repositories, fake payment gateway, env config
+    src/ecommerce_api/__main__.py   entry point: reads the environment and runs uvicorn
+    migrations/        Alembic revisions, each running one SQL file from migrations/sql/
+    tests/             pytest: unit/ with in-memory fakes, integration/ against PostgreSQL
   web/                 Next.js App Router application, client-side rendered
     src/app/           routes (/, /products, /products/new, /products/[id], /products/[id]/edit, /imports, /imports/[id], /cart, /checkout, /orders, /orders/[id]), globals.css tokens
     src/components/ui/ shadcn/ui components (generated, then owned)
@@ -113,7 +115,7 @@ apps/
     src/lib/           API client, typed product/import/order endpoints, URL state for the list, browser cart store, fonts
     src/fonts/         vendored Archivo (display); Geist comes from the `geist` package
 packages/
-  shared/              zod schemas and TypeScript types used by both apps
+  shared/              zod schemas and TypeScript types used by the web app, and validation-cases/ run by both test suites
 data/                  sample product CSV used by the import's integration test
 docs/                  demo recordings used by this file
 openspec/              change proposals, designs, specs and task lists (spec-driven workflow)
@@ -124,7 +126,7 @@ docker-compose.yml     db + api + web
 
 Every endpoint is JSON over HTTP, unauthenticated, on `http://localhost:5001` by default. Validation failures answer `400` with one entry per failing field; an unknown id answers `404`; a conflict answers `409`.
 
-The whole contract is browsable and callable at [`/docs`](http://localhost:5001/docs) — Swagger UI generated from the routes and the shared zod schemas, with the raw OpenAPI document at `/docs/json`.
+The whole contract is browsable and callable at [`/docs`](http://localhost:5001/docs) — Swagger UI generated by FastAPI from the routes and the Pydantic models they validate with, with the raw OpenAPI document at `/docs/json`.
 
 | Method   | Path            | Purpose                                                                                                                                                                                                                                                                                                                     |
 | -------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -148,25 +150,26 @@ Ids are uuid v7. Prices are plain numbers in JSON and `Decimal` in the database.
 
 Each change in this repository was planned before it was built: `openspec/changes/<name>/` holds a proposal (why), a design (how, with alternatives considered), a spec delta (what the system must do, as testable scenarios) and a task list. Archived changes live in `openspec/changes/archive/`, and the accumulated behavior contract lives in `openspec/specs/`.
 
-The architectural choices, with the alternatives that were weighed, are in each change's `design.md`: [`scaffold-monorepo`](openspec/changes/archive/2026-09-20-scaffold-monorepo/design.md), [`products-crud-search`](openspec/changes/archive/2026-09-21-products-crud-search/design.md), [`web-design-system`](openspec/changes/archive/2026-09-21-web-design-system/design.md), [`csv-import`](openspec/changes/archive/2026-09-21-csv-import/design.md), [`purchase`](openspec/changes/archive/2026-09-22-purchase/design.md) and [`purchase-ux`](openspec/changes/archive/2026-09-22-purchase-ux/design.md). In short:
+The architectural choices, with the alternatives that were weighed, are in each change's `design.md`: [`scaffold-monorepo`](openspec/changes/archive/2026-09-20-scaffold-monorepo/design.md), [`products-crud-search`](openspec/changes/archive/2026-09-21-products-crud-search/design.md), [`web-design-system`](openspec/changes/archive/2026-09-21-web-design-system/design.md), [`csv-import`](openspec/changes/archive/2026-09-21-csv-import/design.md), [`purchase`](openspec/changes/archive/2026-09-22-purchase/design.md) and [`purchase-ux`](openspec/changes/archive/2026-09-22-purchase-ux/design.md) and [`migrate-api-to-python`](openspec/changes/migrate-api-to-python/design.md). In short:
 
 **Foundation**
 
 - **Separate API and web app, API owns the database.** The web app is client-side rendered and talks to the API over HTTP with a single public base URL. Rejected: Next.js full-stack (couples UI to domain), Server Components fetching from the API (two base URLs, caching semantics that buy nothing for an admin-style UI).
-- **PostgreSQL + Prisma 7.** Transactional guarantees for stock reservation and text-search extensions later; migrations that run identically locally, in CI and in the container. Rejected: TypeORM (entities drift), Drizzle (younger Nest story), SQLite (no concurrency semantics).
-- **Hexagonal API layout with NestJS confined to `infra/`.** Business rules are plain TypeScript, constructed directly in unit tests; Nest modules bind ports to adapters. Rejected: Nest's conventional feature-module layout (rules end up decorated and coupled to Nest and Prisma).
-- **One zod schema per DTO, shared by API and web.** Rejected: class-validator (cannot be consumed by the browser), OpenAPI codegen (a build step for one team).
-- **OpenAPI generated from those same schemas.** `@nestjs/swagger` reads the routes and the zod schema each one already validates with, so `/docs` cannot drift from what the API accepts: a rule changes in `packages/shared` and the page changes with it. Rejected: a hand-written specification (a second contract to keep in sync) and DTO classes decorated with `@ApiProperty` (every shape written twice, and validation splitting from documentation).
-- **Migrations in the API container entrypoint.** A fresh `up` on an empty volume needs no extra step, and a failing migration stops the API from serving. Rejected: a separate one-shot migrate service.
+- **The API is Python: FastAPI, Pydantic, SQLAlchemy Core, Alembic.** It started as NestJS with Prisma and was rewritten in Python without changing a route, a status code, a body or the schema; every scenario in `openspec/specs/` held, and the TypeScript tests were ported one for one. FastAPI's routers and dependencies replace Nest's controllers and modules, Pydantic replaces zod, and `typing.Protocol` gives the ports. Rejected: Go (the closest runtime fit, but every port and validator rewritten by hand), Clojure (a redesign rather than a translation of the class-based layering), Litestar (smaller ecosystem for no gain on this contract).
+- **PostgreSQL with SQLAlchemy Core (async, psycopg 3), not an ORM.** Transactional guarantees for stock reservation and text-search extensions; the statements that matter (`UPDATE … WHERE stock >= :q RETURNING`, `INSERT … ON CONFLICT`, escaped `ILIKE`) are written as such, and repositories map rows to domain dataclasses. Rejected: the SQLAlchemy ORM (its unit of work and identity map duplicate what the port methods own), SQLModel (merges wire and table models), SQLite (no concurrency semantics).
+- **Hexagonal API layout with the frameworks confined to `infra/`.** Business rules are plain Python, constructed directly in unit tests; one factory, `create_app(config)`, builds the engine, repositories and use cases. Pydantic is allowed in `application/` because the import use case validates rows there, the job zod did before. import-linter enforces the boundaries. Rejected: a DI container library (one function is the whole graph).
+- **The same validation rules on both sides, kept in step by a shared case table.** The web app validates with the zod schemas in `packages/shared`; the API validates with Pydantic models that reproduce them field for field, down to the messages (strict numbers, so `"29.99"` is not a price; trimming before length checks; decimal places checked as the TypeScript does). `packages/shared/validation-cases/*.json` lists inputs with their expected issues, and both Vitest and pytest run it, so a rule changed on one side fails the other's tests. Rejected: generating one side from the other (Luhn, expiry and decimal-place refinements do not survive an OpenAPI or JSON Schema round trip).
+- **OpenAPI generated from the Pydantic models.** FastAPI documents each route from the model it validates with and the error bodies it declares, so `/docs` cannot drift from what the API accepts. Rejected: a hand-written specification (a second contract to keep in sync).
+- **Migrations in the API container entrypoint.** `alembic upgrade head` runs before the server, so a fresh `up` on an empty volume needs no extra step and a failing migration stops the API from serving. The revisions execute the original SQL files verbatim, which is what guarantees the schema did not change in the move. Rejected: a separate one-shot migrate service, and autogenerated revisions (they would re-derive the hand-written trigram index and constraints).
 
 **Product catalog**
 
 - **Categories are a table created on demand, keyed by a case-insensitive name.** The category typed on a product is matched against existing ones (`citext` unique column, so `Electronics` and `electronics` are one row) or created. Rejected: a fixed enum (the next data set with a new category would need a code change) and free text on the product (no clean filter).
 - **Soft delete with a reserved SKU.** Deleting a product sets `deletedAt`; it disappears from every read and from search, but its row survives so future order lines keep resolving. The SKU stays unique across deleted rows, so a new product cannot silently take an old identity; the API answers `409`. Rejected: hard delete (breaks order history), partial unique index (lets a SKU be reused).
-- **Validation rules live in one zod schema, shared by API and form.** `sku` trimmed and upper-cased, `name` required, `price` a decimal with at most two fraction digits and no currency symbol, `stock` a non-negative integer, `weightKg` optional. The form rejects invalid input before a request is sent; the API rejects it again and reports every failing field at once.
+- **Validation rules are the same in the form and the API.** `sku` trimmed and upper-cased, `name` required, `price` a decimal with at most two fraction digits and no currency symbol, `stock` a non-negative integer, `weightKg` optional. The form rejects invalid input before a request is sent; the API rejects it again and reports every failing field at once.
 - **Money as `Decimal` in the database, `number` in JSON.** Exact arithmetic where it will matter (order totals), plain numbers where forms and tables bind them. Rejected: strings in JSON (parsing in every field and cell).
 - **Search is `ILIKE` with a trigram index, not full-text search.** `q` is a case-insensitive substring match on name and description, with `%` and `_` treated literally, served from a `pg_trgm` GIN index. Rejected: `tsvector` (stemming and ranking buy little for short product names and add query-syntax handling) and a search engine (a fourth container for a problem PostgreSQL solves at this scale).
-- **Integration tests hit a real PostgreSQL.** Repository and HTTP tests run against `ecommerce_test`; the behaviors that matter — wildcard escaping, case-insensitive category reuse, soft-delete filtering, unique-violation translation — are SQL behaviors, and mocking Prisma would test the mock. Use cases are unit-tested with in-memory fakes.
+- **Integration tests hit a real PostgreSQL.** Repository and HTTP tests run against `ecommerce_test`; the behaviors that matter — wildcard escaping, case-insensitive category reuse, soft-delete filtering, unique-violation translation — are SQL behaviors, and mocking the database would test the mock. Use cases are unit-tested with in-memory fakes.
 - **The list page keeps its state in the URL.** Search, category, sort and page are query parameters, so a filtered list can be refreshed, shared and navigated with back/forward.
 
 **Web design system**
@@ -210,7 +213,7 @@ Upload a file at `/imports`, or `curl -F file=@data/e-commerce_input.csv http://
 
 Header names are matched case-insensitively; unknown columns are ignored. UTF-8 with an optional BOM, comma-separated, quoted fields allowed. Limits: 2 MB and 5,000 data rows per file. Each row ends as `created`, `updated`, `skipped` (entirely blank line) or `failed` (with issues); rows are numbered by their line in the file, the header being line 1.
 
-The sample file `data/e-commerce_input.csv` has 97 data rows and imports as **87 created, 2 skipped, 8 failed**: `$29.99` and `free` as prices, `-5` stock, an empty and a whitespace-only name, and three later duplicates of `RS-001` / `BS-021`. Importing it a second time gives 87 updated. That outcome is asserted by `apps/api/test/imports.integration.test.ts`.
+The sample file `data/e-commerce_input.csv` has 97 data rows and imports as **87 created, 2 skipped, 8 failed**: `$29.99` and `free` as prices, `-5` stock, an empty and a whitespace-only name, and three later duplicates of `RS-001` / `BS-021`. Importing it a second time gives 87 updated. That outcome is asserted by `apps/api/tests/integration/test_imports_http.py`.
 
 ## Purchase
 
@@ -231,12 +234,12 @@ This is a demonstration system, and it is open on purpose: **there is no authent
 What the code does defend, because it shaped how the rest was written:
 
 - **CORS allows exactly one origin**, `WEB_ORIGIN`. The API answers no other browser origin.
-- **Every input is validated twice by the same zod schema** — in the browser before the request is sent, and in the API pipe before the use case runs. Domain errors become `400`/`404`/`409` in a single exception filter, never a stack trace.
+- **Every input is validated twice by the same rules** — by zod in the browser before the request is sent, and by Pydantic in the API before the use case runs, with a shared case table keeping the two in step. Domain errors become `400`/`404`/`409` in one set of exception handlers, never a stack trace.
 - **Uploads are bounded**: a CSV over 2 MB is rejected with `413` and one over 5,000 data rows with `400`. The file is parsed in memory and never written to disk.
 - **User-supplied text is rendered as text.** `dangerouslySetInnerHTML` is rejected by lint, so a product name carrying markup is escaped by React instead of being filtered on the way in.
-- **Queries are parameterized by Prisma**, and the search term has `%` and `_` escaped so it cannot turn into a wildcard scan.
+- **Queries are parameterized by SQLAlchemy**, and the search term has `%` and `_` escaped so it cannot turn into a wildcard scan.
 - **No card data is stored.** The number, expiry and security code reach the payment port and nowhere else; the order keeps the last four digits.
-- **Both containers run as the unprivileged `node` user**, and the API validates its environment at startup rather than booting with a missing `DATABASE_URL`.
+- **Both containers run as unprivileged users** (`node` for the web app, `app` for the API), and the API validates its environment at startup rather than booting with a missing `DATABASE_URL`.
 
 Out of scope, with what each would take:
 
@@ -248,18 +251,19 @@ Out of scope, with what each would take:
 | A real payment provider               | Webhooks, idempotency keys, and the sweeper for orders left `pending` noted in the design  |
 | Refunds, cancellations, shipping, tax | Order state transitions the domain does not model                                          |
 
-Dependencies are watched by Dependabot (npm, GitHub Actions and both Dockerfiles) and by the CodeQL workflow in `.github/`, and `pnpm audit` is clean. Three transitive packages are pinned forward in the root `pnpm.overrides` because their own parents had not released yet: `mysql2` and `deepmerge-ts`, which reach the API image through the Prisma CLI — the CLI ships there so that `prisma migrate deploy` can run at container start — and `file-type`, which comes in with the SWC CLI at build time only.
+Dependencies are watched by Dependabot (npm, uv, GitHub Actions and both Dockerfiles) and by the CodeQL workflow in `.github/`, which analyzes both the TypeScript and the Python code, and `pnpm audit` is clean.
 
 ## Status
 
-| Change                 | State    | Delivers                                                                                |
-| ---------------------- | -------- | --------------------------------------------------------------------------------------- |
-| `scaffold-monorepo`    | archived | monorepo, API + web skeletons, Postgres, Docker, CI, this file                          |
-| `products-crud-search` | archived | `Product`/`Category` model, CRUD API, list + search + form UI                           |
-| `web-design-system`    | archived | Tailwind + shadcn/ui, black-and-white typographic UI, detail page                       |
-| `csv-import`           | archived | CSV upload, per-row validation report, upsert by SKU                                    |
-| `purchase`             | archived | cart, checkout, orders API with stock reservation, fake payment                         |
-| `purchase-ux`          | archived | one-click checkout with test-card selector, steppers, confirmed removal, pressed states |
+| Change                  | State     | Delivers                                                                                |
+| ----------------------- | --------- | --------------------------------------------------------------------------------------- |
+| `scaffold-monorepo`     | archived  | monorepo, API + web skeletons, Postgres, Docker, CI, this file                          |
+| `products-crud-search`  | archived  | `Product`/`Category` model, CRUD API, list + search + form UI                           |
+| `web-design-system`     | archived  | Tailwind + shadcn/ui, black-and-white typographic UI, detail page                       |
+| `csv-import`            | archived  | CSV upload, per-row validation report, upsert by SKU                                    |
+| `purchase`              | archived  | cart, checkout, orders API with stock reservation, fake payment                         |
+| `purchase-ux`           | archived  | one-click checkout with test-card selector, steppers, confirmed removal, pressed states |
+| `migrate-api-to-python` | in review | the API rewritten in Python (FastAPI, SQLAlchemy Core, Alembic) with the same contract  |
 
 Four smaller changes shipped after `purchase-ux` as plain pull requests. None of them added behavior worth a spec, so none got an OpenSpec change of its own:
 
@@ -268,7 +272,7 @@ Four smaller changes shipped after `purchase-ux` as plain pull requests. None of
 | `demo-recordings`       | merged    | the two GIFs in [Demo](#demo)                                                 |
 | `env-driven-ports`      | merged    | `API_PORT` and `WEB_PORT` read from the environment by `pnpm dev` and Compose |
 | `ui-interaction-states` | in review | hover, press and focus feedback in every control                              |
-| `api-openapi-docs`      | in review | Swagger UI at `/docs`, generated from the routes and the shared zod schemas   |
+| `api-openapi-docs`      | in review | Swagger UI at `/docs`, generated from the routes and the validation schemas   |
 
 ## License
 
