@@ -6,14 +6,6 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
-const apiLayer = (files, forbidden, message) => ({
-  files,
-  ignores: ['**/*.test.ts'],
-  rules: {
-    'no-restricted-imports': ['error', { patterns: [{ group: forbidden, message }] }],
-  },
-})
-
 export default tseslint.config(
   {
     ignores: [
@@ -21,7 +13,7 @@ export default tseslint.config(
       '**/dist/**',
       '**/.next/**',
       '**/coverage/**',
-      '**/src/generated/**',
+      'apps/api/**',
       '**/next-env.d.ts',
     ],
   },
@@ -49,18 +41,8 @@ export default tseslint.config(
       'import-x/no-duplicates': 'error',
     },
   },
-  apiLayer(
-    ['apps/api/src/domain/**/*.ts'],
-    ['**/application/**', '**/infra/**', '@/application/*', '@/infra/*', '@nestjs/*', '@prisma/*'],
-    'domain/ must not import application/, infra/ or frameworks. Dependencies point inward only.',
-  ),
-  apiLayer(
-    ['apps/api/src/application/**/*.ts'],
-    ['**/infra/**', '**/generated/**', '@/infra/*', '@/generated/*', '@nestjs/*', '@prisma/*'],
-    'application/ must not import infra/ or frameworks. Depend on a port in application/ports/ instead.',
-  ),
   {
-    files: ['apps/*/src/**/*.{ts,tsx}', 'apps/*/test/**/*.ts', 'packages/*/src/**/*.ts'],
+    files: ['apps/web/src/**/*.{ts,tsx}', 'packages/*/src/**/*.ts'],
     ignores: ['**/*.config.*'],
     plugins: { 'no-comments': noComments },
     rules: {

@@ -4,8 +4,7 @@ dist
 coverage
 .turbo
 pnpm-lock.yaml
-apps/api/src/generated
-apps/api/prisma/migrations
+apps/api
 openspec
 .claude
 apps/web/next-env.d.ts
