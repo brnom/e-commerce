@@ -1,4 +1,4 @@
-# E-commerce
+# <img src="apps/web/src/app/icon.svg" alt="" width="24" height="24"> E-commerce
 
 A small e-commerce platform: a product catalog with search, bulk import from CSV, and a purchase flow with a simulated payment provider. It is built as a pnpm monorepo with a NestJS API, a Next.js web app and PostgreSQL, and runs end to end with one `docker compose up`.
 
