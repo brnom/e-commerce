@@ -14,7 +14,10 @@ export function CartLink({ className }: { readonly className?: string }) {
     >
       Cart
       {count > 0 && (
-        <span className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-foreground px-1.5 font-mono text-[11px] leading-5 text-background tabular-nums">
+        <span
+          key={count}
+          className="ml-1.5 inline-flex min-w-5 animate-in items-center justify-center rounded-full bg-foreground px-1.5 font-mono text-[11px] leading-5 text-background tabular-nums duration-200 zoom-in-50"
+        >
           {count}
         </span>
       )}
