@@ -4,6 +4,18 @@ A small e-commerce platform: a product catalog with search, bulk import from CSV
 
 This repository was built for a technical assessment. The functional brief (product CRUD, CSV import, search, purchase with a fake payment, a UI for all of it, Docker, local DB) is treated here as the product requirements of a real system, and the reasoning behind each decision is recorded in [Decisions](#decisions) and in the `openspec/` directory.
 
+## Demo
+
+Both recordings are of the running stack: the Next.js app on `localhost:3000` talking to the NestJS API on `localhost:3001`.
+
+**Catalog — search, filter and create a product.** A search with no match shows the empty state, the category select filters the list, a row opens the product page, and the form creates the product that was missing.
+
+![Browsing, filtering and creating a product](docs/demo-catalog.gif)
+
+**CSV import and purchase.** `data/e-commerce_input.csv` is imported with its per-row report (87 updated, 2 skipped, 8 failed, each failure naming the field and the reason), then a product goes into the cart and the one-click checkout places a paid order with the simulated provider.
+
+![Importing a CSV and placing an order](docs/demo-import-purchase.gif)
+
 ## Prerequisites
 
 - Docker Desktop (or Docker Engine 24+ with the Compose plugin) to run the stack.
@@ -92,6 +104,7 @@ apps/
 packages/
   shared/              zod schemas and TypeScript types used by both apps
 data/                  sample product CSV used by the import's integration test
+docs/                  demo recordings used by this file
 openspec/              change proposals, designs, specs and task lists (spec-driven workflow)
 docker-compose.yml     db + api + web
 ```
