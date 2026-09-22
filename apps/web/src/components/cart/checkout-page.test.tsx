@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CheckoutPage } from './checkout-page'
+import { testCardExpiry } from './test-card-select'
 import { cartStore } from '@/lib/cart-store'
 import { calls, renderWithQuery, stubApi } from '@/test-utils'
 
@@ -35,13 +36,13 @@ const order = (status: 'paid' | 'payment_failed', declineReason: string | null =
   updatedAt: '2026-09-21T10:00:00.000Z',
 })
 
-async function fillForm(user: ReturnType<typeof userEvent.setup>, cardNumber: string) {
-  await user.type(screen.getByLabelText('Name'), 'Ada Lovelace')
-  await user.type(screen.getByLabelText('Email'), 'ada@example.com')
-  await user.type(screen.getByLabelText('Cardholder name'), 'Ada Lovelace')
-  await user.type(screen.getByLabelText('Card number'), cardNumber)
-  await user.type(screen.getByLabelText('Expiry'), '12/99')
-  await user.type(screen.getByLabelText('Security code'), '123')
+type User = ReturnType<typeof userEvent.setup>
+
+const placeOrderButton = () => screen.getByRole('button', { name: /^Place order/ })
+
+async function chooseCard(user: User, option: RegExp) {
+  await user.click(screen.getByRole('combobox', { name: 'Card' }))
+  await user.click(await screen.findByRole('option', { name: option }))
 }
 
 describe('CheckoutPage', () => {
@@ -56,15 +57,18 @@ describe('CheckoutPage', () => {
     push.mockReset()
   })
 
-  it('posts the cart with digit-only card number, clears the cart and opens the order', async () => {
+  it('places a paid order in one click with the sample customer and the approving card', async () => {
     const fetchMock = stubApi([
       { method: 'POST', path: /\/orders$/, status: 201, body: order('paid') },
     ])
     renderWithQuery(<CheckoutPage />)
     const user = userEvent.setup()
 
-    await fillForm(user, '4242 4242 4242 4242')
-    await user.click(screen.getByRole('button', { name: 'Place order' }))
+    expect(screen.getByLabelText('Approved test card ending in 4242')).toHaveTextContent(
+      '•••• •••• •••• 4242',
+    )
+    expect(placeOrderButton()).toHaveTextContent('Place order · $239.95')
+    await user.click(placeOrderButton())
 
     await vi.waitFor(() => expect(push).toHaveBeenCalledWith(`/orders/${orderId}`))
     const [, init] = calls(fetchMock, 'POST')[0]!
@@ -77,15 +81,41 @@ describe('CheckoutPage', () => {
       card: {
         cardholderName: 'Ada Lovelace',
         cardNumber: '4242424242424242',
-        expiry: '12/99',
+        expiry: testCardExpiry(),
         cvc: '123',
       },
     })
     expect(cartStore.getSnapshot()).toEqual([])
   })
 
+  it('sends a typed card with the number as digits only', async () => {
+    const fetchMock = stubApi([
+      { method: 'POST', path: /\/orders$/, status: 201, body: order('paid') },
+    ])
+    renderWithQuery(<CheckoutPage />)
+    const user = userEvent.setup()
+
+    await chooseCard(user, /Enter another card/)
+    await user.type(screen.getByLabelText('Cardholder name'), 'Grace Hopper')
+    await user.type(screen.getByLabelText('Card number'), '4242 4242 4242 4242')
+    await user.type(screen.getByLabelText('Expiry'), '12/99')
+    await user.type(screen.getByLabelText('Security code'), '321')
+    await user.click(placeOrderButton())
+
+    await vi.waitFor(() => expect(push).toHaveBeenCalledWith(`/orders/${orderId}`))
+    const [, init] = calls(fetchMock, 'POST')[0]!
+    expect(JSON.parse(init!.body as string)).toMatchObject({
+      card: {
+        cardholderName: 'Grace Hopper',
+        cardNumber: '4242424242424242',
+        expiry: '12/99',
+        cvc: '321',
+      },
+    })
+  }, 10_000)
+
   it('shows the decline reason and keeps the cart and the form', async () => {
-    stubApi([
+    const fetchMock = stubApi([
       {
         method: 'POST',
         path: /\/orders$/,
@@ -96,17 +126,26 @@ describe('CheckoutPage', () => {
     renderWithQuery(<CheckoutPage />)
     const user = userEvent.setup()
 
-    await fillForm(user, '4000 0000 0000 0002')
-    await user.click(screen.getByRole('button', { name: 'Place order' }))
+    await user.clear(screen.getByLabelText('Name'))
+    await user.type(screen.getByLabelText('Name'), 'Grace Hopper')
+    await chooseCard(user, /^Declined/)
+    expect(screen.getByLabelText('Declined test card ending in 0002')).toHaveTextContent(
+      'Grace Hopper',
+    )
+    await user.click(placeOrderButton())
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Payment declined: Your card was declined',
     )
+    const [, init] = calls(fetchMock, 'POST')[0]!
+    expect(JSON.parse(init!.body as string)).toMatchObject({
+      card: { cardholderName: 'Grace Hopper', cardNumber: '4000000000000002' },
+    })
     expect(
       screen.getByRole('link', { name: `order #${orderId.slice(-8).toUpperCase()}` }),
     ).toHaveAttribute('href', `/orders/${orderId}`)
     expect(cartStore.getSnapshot()).toHaveLength(2)
-    expect(screen.getByLabelText('Name')).toHaveValue('Ada Lovelace')
+    expect(screen.getByLabelText('Name')).toHaveValue('Grace Hopper')
     expect(push).not.toHaveBeenCalled()
   })
 
@@ -128,8 +167,7 @@ describe('CheckoutPage', () => {
     renderWithQuery(<CheckoutPage />)
     const user = userEvent.setup()
 
-    await fillForm(user, '4242 4242 4242 4242')
-    await user.click(screen.getByRole('button', { name: 'Place order' }))
+    await user.click(placeOrderButton())
 
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('Running Shoes: only 1 in stock, quantity lowered')
@@ -137,7 +175,7 @@ describe('CheckoutPage', () => {
     expect(cartStore.getSnapshot()).toEqual([
       expect.objectContaining({ productId: shoesId, quantity: 1 }),
     ])
-    expect(screen.getByRole('button', { name: 'Place order' })).toBeEnabled()
+    expect(placeOrderButton()).toBeEnabled()
   })
 
   it('blocks submission with field messages and sends nothing', async () => {
@@ -145,13 +183,14 @@ describe('CheckoutPage', () => {
     renderWithQuery(<CheckoutPage />)
     const user = userEvent.setup()
 
-    await user.type(screen.getByLabelText('Name'), 'Ada Lovelace')
+    await user.clear(screen.getByLabelText('Email'))
     await user.type(screen.getByLabelText('Email'), 'not-an-email')
+    await chooseCard(user, /Enter another card/)
     await user.type(screen.getByLabelText('Cardholder name'), 'Ada Lovelace')
     await user.type(screen.getByLabelText('Card number'), '1234')
     await user.type(screen.getByLabelText('Expiry'), '12/99')
     await user.type(screen.getByLabelText('Security code'), '123')
-    await user.click(screen.getByRole('button', { name: 'Place order' }))
+    await user.click(placeOrderButton())
 
     expect(await screen.findByText('Enter a valid email address')).toBeInTheDocument()
     expect(screen.getByText('Card number must be 13 to 19 digits')).toBeInTheDocument()
@@ -164,6 +203,6 @@ describe('CheckoutPage', () => {
     renderWithQuery(<CheckoutPage />)
 
     expect(screen.getByRole('heading', { name: 'Your cart is empty' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Place order' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Place order/ })).not.toBeInTheDocument()
   })
 })
