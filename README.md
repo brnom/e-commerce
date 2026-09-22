@@ -142,6 +142,7 @@ The architectural choices, with the alternatives that were weighed, are in each 
 - **The payment provider is a port with a deterministic fake adapter.** `4242 4242 4242 4242` (or any other valid number) approves, `4000 0000 0000 0002` is declined, `4000 0000 0000 9995` has insufficient funds — the widely known test numbers, which pass the Luhn check the form and API enforce. Rejected: random outcomes (not reproducible in tests or demos) and always-approve (the stock-release path would be untested code).
 - **No card data is stored.** The card number, expiry and security code go to the gateway and nowhere else; the order keeps the last four digits. A crash between reservation and settlement leaves an order `pending` with its stock held; that state is visible in `/orders` and, with a real provider, would get a sweeper.
 - **Order lines are a snapshot.** Each line records the SKU, name and unit price at purchase time, and totals are computed in integer cents, so a later price change or deletion never rewrites an order and `3 × 19.99` is `59.97`. The line keeps a foreign key to the product — the reason products are soft-deleted rather than removed.
+- **The checkout is one click by default.** The provider is a fake with three known outcomes, so the honest UI for it is a selector listing those outcomes with the approving card pre-selected and a sample customer filled in; picking "Enter another card" shows the plain card fields, and the form values stay the single source of truth, so validation and the request are the same either way. Rejected: empty fields that everyone fills by copying a number from this file, and a hidden "demo mode" toggle for a provider that is always a demo.
 - **The cart lives in the browser.** It is a `localStorage`-backed store read through `useSyncExternalStore`, holding a display snapshot per line; the order is priced by the API from the catalog, never from the cart. Rejected: a server-side cart (a session or customer concept the product does not have) and holding stock while items sit in a cart.
 
 ## CSV import
@@ -164,7 +165,7 @@ The sample file `data/e-commerce_input.csv` (downloaded on **2026-09-20**) has 9
 
 ## Purchase
 
-Add products to the cart from the products page or a product's page, review the cart at `/cart`, and pay at `/checkout` with a name, an email and a card. Orders appear at `/orders` and each order has a page with its lines, total, status and card's last four digits. The payment provider is simulated; use these card numbers with any future expiry (`MM/YY`) and any 3–4 digit security code:
+Add products to the cart from the products page or a product's page, review the cart at `/cart`, and pay at `/checkout` with a name, an email and a card. The checkout opens ready to submit: the customer fields hold a sample customer and the card selector has the approving test card chosen, so one click places a paid order. The selector also offers the two declining cards and an "Enter another card" option that reveals the card fields. Orders appear at `/orders` and each order has a page with its lines, total, status and card's last four digits. The payment provider is simulated; these are its test cards (any future expiry `MM/YY` and any 3–4 digit security code work when typing one):
 
 | Card number           | Outcome                                                          |
 | --------------------- | ---------------------------------------------------------------- |
@@ -176,10 +177,11 @@ Endpoints: `POST /orders` (`{ items: [{ productId, quantity }], customer: { name
 
 ## Status
 
-| Change                 | State    | Delivers                                                          |
-| ---------------------- | -------- | ----------------------------------------------------------------- |
-| `scaffold-monorepo`    | archived | monorepo, API + web skeletons, Postgres, Docker, CI, this file    |
-| `products-crud-search` | archived | `Product`/`Category` model, CRUD API, list + search + form UI     |
-| `web-design-system`    | archived | Tailwind + shadcn/ui, black-and-white typographic UI, detail page |
-| `csv-import`           | archived | CSV upload, per-row validation report, upsert by SKU              |
-| `purchase`             | applied  | cart, checkout, orders API with stock reservation, fake payment   |
+| Change                 | State    | Delivers                                                                                |
+| ---------------------- | -------- | --------------------------------------------------------------------------------------- |
+| `scaffold-monorepo`    | archived | monorepo, API + web skeletons, Postgres, Docker, CI, this file                          |
+| `products-crud-search` | archived | `Product`/`Category` model, CRUD API, list + search + form UI                           |
+| `web-design-system`    | archived | Tailwind + shadcn/ui, black-and-white typographic UI, detail page                       |
+| `csv-import`           | archived | CSV upload, per-row validation report, upsert by SKU                                    |
+| `purchase`             | applied  | cart, checkout, orders API with stock reservation, fake payment                         |
+| `purchase-ux`          | applied  | one-click checkout with test-card selector, steppers, confirmed removal, pressed states |
