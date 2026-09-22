@@ -37,21 +37,41 @@ describe('CartPage', () => {
     expect(screen.getByRole('link', { name: 'Checkout' })).toHaveAttribute('href', '/checkout')
   })
 
-  it('edits a quantity and removes a line', async () => {
+  it('edits a quantity with the stepper', async () => {
     cartStore.add(shoes, 2)
     cartStore.add(mouse, 1)
     renderWithQuery(<CartPage />)
     const user = userEvent.setup()
 
-    const quantity = screen.getByLabelText('Quantity of Running Shoes')
-    await user.clear(quantity)
-    await user.type(quantity, '3')
+    await user.click(screen.getByRole('button', { name: 'Increase quantity of Running Shoes' }))
+    expect(screen.getByLabelText('Quantity of Running Shoes')).toHaveValue(3)
     expect(screen.getByText('$269.97')).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Remove Wireless Mouse' }))
-    expect(screen.queryByRole('link', { name: 'Wireless Mouse' })).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Decrease quantity of Wireless Mouse' }),
+    ).toBeDisabled()
     expect(cartStore.getSnapshot()).toEqual([
       expect.objectContaining({ productId: 'p-shoes', quantity: 3 }),
+      expect.objectContaining({ productId: 'p-mouse', quantity: 1 }),
+    ])
+  })
+
+  it('removes a line only after confirmation', async () => {
+    cartStore.add(shoes, 2)
+    cartStore.add(mouse, 1)
+    renderWithQuery(<CartPage />)
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: 'Remove Wireless Mouse' }))
+    expect(await screen.findByRole('alertdialog', { name: 'Remove from cart?' })).toBeVisible()
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.getByRole('link', { name: 'Wireless Mouse' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Remove Wireless Mouse' }))
+    await user.click(await screen.findByRole('button', { name: 'Remove' }))
+    expect(screen.queryByRole('link', { name: 'Wireless Mouse' })).not.toBeInTheDocument()
+    expect(screen.queryByText('$199.97')).not.toBeInTheDocument()
+    expect(cartStore.getSnapshot()).toEqual([
+      expect.objectContaining({ productId: 'p-shoes', quantity: 2 }),
     ])
   })
 
