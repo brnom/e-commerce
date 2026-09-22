@@ -34,6 +34,14 @@ Then open:
 
 The API applies pending database migrations before it starts listening; the database keeps its data in the `pgdata` volume across restarts. Use `docker compose down -v` to start from an empty database.
 
+**The catalog starts empty.** Load the 97-row sample file to get a populated store:
+
+```bash
+curl -F file=@data/e-commerce_input.csv http://localhost:5001/imports
+```
+
+The same file can be uploaded at http://localhost:3005/imports, which shows the per-row report described in [CSV import](#csv-import).
+
 ## Run for development
 
 ```bash
@@ -111,6 +119,28 @@ docs/                  demo recordings used by this file
 openspec/              change proposals, designs, specs and task lists (spec-driven workflow)
 docker-compose.yml     db + api + web
 ```
+
+## API
+
+Every endpoint is JSON over HTTP, unauthenticated, on `http://localhost:5001` by default. Validation failures answer `400` with one entry per failing field; an unknown id answers `404`; a conflict answers `409`.
+
+| Method   | Path            | Purpose                                                                                                                                                                                                                                                                                                                     |
+| -------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`    | `/health`       | Liveness plus a database check, used by the Compose healthcheck.                                                                                                                                                                                                                                                            |
+| `GET`    | `/products`     | Paginated list, answering `{ items, total, page, limit }`. Query: `q` (case-insensitive substring of name or description), `category` (a category id), `sort` (`name`, `price`, `stock`, `createdAt`; default `createdAt`), `order` (`asc`, `desc`; default `desc`), `page` (default 1), `limit` (default 20, at most 100). |
+| `POST`   | `/products`     | Creates a product. Body: `name`, `sku`, `price`, `stock`, optional `description`, `category`, `weightKg`. `409` when the SKU is taken, including by a deleted product.                                                                                                                                                      |
+| `GET`    | `/products/:id` | One product. `404` once it is deleted.                                                                                                                                                                                                                                                                                      |
+| `PATCH`  | `/products/:id` | Partial update, same field rules as the create.                                                                                                                                                                                                                                                                             |
+| `DELETE` | `/products/:id` | Soft delete; answers `204`. The row survives so order lines keep resolving.                                                                                                                                                                                                                                                 |
+| `GET`    | `/categories`   | Every category, ordered by name. Categories are created on demand by products and imports.                                                                                                                                                                                                                                  |
+| `POST`   | `/imports`      | `multipart/form-data` with a `file` field. See [CSV import](#csv-import) for the contract and the limits.                                                                                                                                                                                                                   |
+| `GET`    | `/imports`      | Job summaries, newest first, without their row reports.                                                                                                                                                                                                                                                                     |
+| `GET`    | `/imports/:id`  | One job with the full per-row report.                                                                                                                                                                                                                                                                                       |
+| `POST`   | `/orders`       | Places an order. See [Purchase](#purchase) for the body, the `409` shape and the payment outcomes.                                                                                                                                                                                                                          |
+| `GET`    | `/orders`       | Order summaries, newest first.                                                                                                                                                                                                                                                                                              |
+| `GET`    | `/orders/:id`   | One order with its lines, total, status and the card's last four digits.                                                                                                                                                                                                                                                    |
+
+Ids are uuid v7. Prices are plain numbers in JSON and `Decimal` in the database.
 
 ## Decisions
 
