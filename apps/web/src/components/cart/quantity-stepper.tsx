@@ -47,9 +47,9 @@ export function QuantityStepper({
     >
       <Button
         type="button"
-        variant="ghost"
+        variant="invert"
         size="icon-sm"
-        className="h-auto rounded-r-none active:scale-100"
+        className="h-auto rounded-r-none hover:shadow-none active:scale-100 active:bg-foreground/70"
         aria-label={`Decrease quantity of ${name}`}
         disabled={disabled || value <= min}
         onClick={() => commit(value - 1)}
@@ -75,9 +75,9 @@ export function QuantityStepper({
       />
       <Button
         type="button"
-        variant="ghost"
+        variant="invert"
         size="icon-sm"
-        className="h-auto rounded-l-none active:scale-100"
+        className="h-auto rounded-l-none hover:shadow-none active:scale-100 active:bg-foreground/70"
         aria-label={`Increase quantity of ${name}`}
         disabled={disabled || value >= max}
         onClick={() => commit(value + 1)}

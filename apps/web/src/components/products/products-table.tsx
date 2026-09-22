@@ -114,7 +114,7 @@ export function ProductsTable({ items, state, onSort }: Props) {
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
-                  <AddToCartButton product={product} variant="ghost" size="sm" />
+                  <AddToCartButton product={product} variant="invert" size="sm" />
                   <Button asChild variant="ghost" size="sm">
                     <Link href={`/products/${product.id}/edit`}>Edit</Link>
                   </Button>
