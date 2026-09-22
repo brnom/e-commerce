@@ -43,10 +43,13 @@ describe('ProductDetailPage', () => {
     renderWithQuery(<ProductDetailPage productId={id} />)
     const user = userEvent.setup()
 
-    const quantity = await screen.findByLabelText('Quantity')
-    await user.clear(quantity)
-    await user.type(quantity, '2')
+    await user.click(
+      await screen.findByRole('button', { name: 'Increase quantity of Running Shoes' }),
+    )
+    expect(screen.getByLabelText('Quantity of Running Shoes')).toHaveValue(2)
     await user.click(screen.getByRole('button', { name: 'Add Running Shoes to cart' }))
+
+    expect(screen.getByRole('link', { name: 'View cart' })).toHaveAttribute('href', '/cart')
 
     expect(cartStore.getSnapshot()).toEqual([
       expect.objectContaining({ productId: id, sku: 'RS-001', unitPrice: 89.99, quantity: 2 }),
@@ -60,7 +63,8 @@ describe('ProductDetailPage', () => {
     expect(
       await screen.findByRole('button', { name: 'Out of stock: Running Shoes' }),
     ).toBeDisabled()
-    expect(screen.getByLabelText('Quantity')).toBeDisabled()
+    expect(screen.queryByLabelText('Quantity of Running Shoes')).not.toBeInTheDocument()
+    expect(screen.getByText('0 in stock')).toBeInTheDocument()
   })
 
   it('shows every field of the product', async () => {
