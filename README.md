@@ -34,7 +34,7 @@ Then open:
 
 The API applies pending database migrations before it starts listening; the database keeps its data in the `pgdata` volume across restarts. Use `docker compose down -v` to start from an empty database.
 
-**The catalog starts empty.** Load the 97-row sample file to get a populated store:
+**The catalog starts empty.** Load the 97-row sample file, downloaded on **2026-09-17**, to get a populated store:
 
 ```bash
 curl -F file=@data/e-commerce_input.csv http://localhost:5001/imports
@@ -210,7 +210,7 @@ Upload a file at `/imports`, or `curl -F file=@data/e-commerce_input.csv http://
 
 Header names are matched case-insensitively; unknown columns are ignored. UTF-8 with an optional BOM, comma-separated, quoted fields allowed. Limits: 2 MB and 5,000 data rows per file. Each row ends as `created`, `updated`, `skipped` (entirely blank line) or `failed` (with issues); rows are numbered by their line in the file, the header being line 1.
 
-The sample file `data/e-commerce_input.csv` (downloaded on **2026-09-20**) has 97 data rows and imports as **87 created, 2 skipped, 8 failed**: `$29.99` and `free` as prices, `-5` stock, an empty and a whitespace-only name, and three later duplicates of `RS-001` / `BS-021`. Importing it a second time gives 87 updated. That outcome is asserted by `apps/api/test/imports.integration.test.ts`.
+The sample file `data/e-commerce_input.csv` has 97 data rows and imports as **87 created, 2 skipped, 8 failed**: `$29.99` and `free` as prices, `-5` stock, an empty and a whitespace-only name, and three later duplicates of `RS-001` / `BS-021`. Importing it a second time gives 87 updated. That outcome is asserted by `apps/api/test/imports.integration.test.ts`.
 
 ## Purchase
 
