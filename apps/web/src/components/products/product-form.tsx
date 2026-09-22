@@ -55,7 +55,7 @@ export function ProductForm({ defaultValues, values, submitLabel, onSubmit }: Pr
   const categories = useCategories()
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(createProductSchema),
-    defaultValues: { description: '', category: '', ...defaultValues },
+    defaultValues: { sku: '', name: '', description: '', category: '', ...defaultValues },
     values,
     resetOptions: { keepDirtyValues: true },
   })
