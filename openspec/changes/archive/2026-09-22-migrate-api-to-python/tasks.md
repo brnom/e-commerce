@@ -46,7 +46,7 @@
 
 - [x] 6.1 Rewrite `apps/api/package.json` as `uv run` wrappers: `lint` (ruff check, ruff format --check, lint-imports, check_sources), `lint:fix`, `typecheck` (mypy), `test` (pytest) and `dev` (uvicorn reload on `API_PORT`). Drop the `@ecommerce/shared` dependency. Remove the `db:generate` task and its `dependsOn` edges from `turbo.json`. Have ESLint and Prettier ignore `apps/api`. Verify with `pnpm check` and `pnpm dev`, then open `http://localhost:3005` against the Python API.
 - [x] 6.2 Rewrite `apps/api/Dockerfile` on `python:3.14-slim`: uv from its official image, `uv sync --locked --no-dev` in a build stage, a non-root `app` user, and `alembic upgrade head && exec python -m ecommerce_api`. Change the Compose API healthcheck to a `python -c` urllib request. Verify that `docker compose down -v && docker compose up --build` reports all three services healthy.
-- [ ] 6.3 Add `astral-sh/setup-uv` with Python 3.14 to `.github/workflows/ci.yml` ahead of `pnpm check`. Add `python` to the CodeQL languages, and the `uv` ecosystem for `/apps/api` to `.github/dependabot.yml`. Verify that the PR's CI run is green, with both jobs and CodeQL passing.
+- [x] 6.3 Add `astral-sh/setup-uv` with Python 3.14 to `.github/workflows/ci.yml` ahead of `pnpm check`. Add `python` to the CodeQL languages, and the `uv` ecosystem for `/apps/api` to `.github/dependabot.yml`. Verify that the PR's CI run is green, with both jobs and CodeQL passing.
 
 ## 7. Remove the NestJS implementation
 
@@ -68,7 +68,7 @@
 
 ## 9. End-to-end verification
 
-- [ ] 9.1 With `docker compose down -v && docker compose up --build`:
+- [x] 9.1 With `docker compose down -v && docker compose up --build`:
   - import `data/e-commerce_input.csv` from the web app and check the report;
   - search and filter the catalog, then create, edit and delete a product;
   - place a paid order and a declined order and check the stock on each;
