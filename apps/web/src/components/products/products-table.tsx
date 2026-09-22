@@ -92,10 +92,7 @@ export function ProductsTable({ items, state, onSort }: Props) {
                 {product.sku}
               </TableCell>
               <TableCell className="font-medium">
-                <Link
-                  href={`/products/${product.id}`}
-                  className="underline-offset-4 hover:underline"
-                >
+                <Link href={`/products/${product.id}`} className="text-link">
                   {product.name}
                 </Link>
               </TableCell>

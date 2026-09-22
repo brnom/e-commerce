@@ -78,3 +78,9 @@
   text-wrap: balance;
   overflow-wrap: anywhere;
 }
+
+@utility text-link {
+  @apply rounded-xs underline-offset-4 transition-[color,text-decoration-color] duration-150;
+  @apply hover:underline hover:decoration-2;
+  @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring;
+}

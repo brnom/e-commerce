@@ -15,10 +15,7 @@ export function Breadcrumb({ items, current }: Props) {
     >
       {items.map((item) => (
         <Fragment key={item.href}>
-          <Link
-            href={item.href}
-            className="underline-offset-4 hover:text-foreground hover:underline"
-          >
+          <Link href={item.href} className="text-link hover:text-foreground">
             {item.label}
           </Link>
           <ChevronRight aria-hidden="true" className="size-3" />

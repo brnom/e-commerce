@@ -71,7 +71,7 @@ function OrdersList() {
           {orders.data.map((order) => (
             <TableRow key={order.id}>
               <TableCell className="font-mono font-medium">
-                <Link href={`/orders/${order.id}`} className="underline-offset-4 hover:underline">
+                <Link href={`/orders/${order.id}`} className="text-link">
                   {formatShortId(order.id)}
                 </Link>
               </TableCell>
