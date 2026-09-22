@@ -43,6 +43,12 @@ jobs:
           key: turbo-${{ runner.os }}-${{ github.sha }}
           restore-keys: turbo-${{ runner.os }}-
 
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.14'
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm check
