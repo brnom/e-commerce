@@ -178,6 +178,28 @@ describe('CheckoutPage', () => {
     expect(placeOrderButton()).toBeEnabled()
   })
 
+  it('shows a cart-level validation issue from the API instead of a generic failure', async () => {
+    stubApi([
+      {
+        method: 'POST',
+        path: /\/orders$/,
+        status: 400,
+        body: {
+          message: 'Validation failed',
+          issues: [{ path: 'items', message: 'The order must have at most 50 items' }],
+        },
+      },
+    ])
+    renderWithQuery(<CheckoutPage />)
+    const user = userEvent.setup()
+
+    await user.click(placeOrderButton())
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'The order must have at most 50 items',
+    )
+  })
+
   it('blocks submission with field messages and sends nothing', async () => {
     const fetchMock = stubApi([])
     renderWithQuery(<CheckoutPage />)

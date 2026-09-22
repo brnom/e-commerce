@@ -169,7 +169,11 @@ export function CheckoutPage() {
       for (const issue of fieldIssues) {
         if (isFieldName(issue.path)) form.setError(issue.path, { message: issue.message })
       }
-      return fieldIssues.length > 0
+      const cartIssues = issues.filter((issue) => !isFieldName(issue.path))
+      if (fieldIssues.length === 0 && cartIssues.length > 0) {
+        form.setError('root', { message: cartIssues.map((issue) => issue.message).join('. ') })
+      }
+      return issues.length > 0
     }
     if (error.status === 409) {
       const items = (error.body as UnavailableBody).items ?? []
