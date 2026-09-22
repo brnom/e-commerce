@@ -1,3 +1,4 @@
+import { testCards } from '@ecommerce/shared'
 import { Injectable } from '@nestjs/common'
 import { randomBytes } from 'node:crypto'
 
@@ -7,13 +8,11 @@ import type {
   PaymentGateway,
 } from '@/application/ports/payment-gateway'
 
-export const DECLINED_CARD = '4000000000000002'
-export const INSUFFICIENT_FUNDS_CARD = '4000000000009995'
-
-const declines: ReadonlyMap<string, string> = new Map([
-  [DECLINED_CARD, 'Your card was declined'],
-  [INSUFFICIENT_FUNDS_CARD, 'Your card has insufficient funds'],
-])
+const declines: ReadonlyMap<string, string> = new Map(
+  testCards.flatMap((card) =>
+    card.outcome === 'declined' && card.declineReason ? [[card.number, card.declineReason]] : [],
+  ),
+)
 
 @Injectable()
 export class FakePaymentGateway implements PaymentGateway {

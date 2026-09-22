@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { DECLINED_CARD, FakePaymentGateway, INSUFFICIENT_FUNDS_CARD } from './fake-payment-gateway'
+import { FakePaymentGateway } from './fake-payment-gateway'
 
 const charge = (cardNumber: string) => ({
   orderId: 'order-1',
@@ -19,14 +19,14 @@ describe('FakePaymentGateway', () => {
   })
 
   it('declines the generic decline card', async () => {
-    await expect(gateway.charge(charge(DECLINED_CARD))).resolves.toEqual({
+    await expect(gateway.charge(charge('4000000000000002'))).resolves.toEqual({
       outcome: 'declined',
       reason: 'Your card was declined',
     })
   })
 
   it('declines the insufficient funds card', async () => {
-    await expect(gateway.charge(charge(INSUFFICIENT_FUNDS_CARD))).resolves.toEqual({
+    await expect(gateway.charge(charge('4000000000009995'))).resolves.toEqual({
       outcome: 'declined',
       reason: 'Your card has insufficient funds',
     })
