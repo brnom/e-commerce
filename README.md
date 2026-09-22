@@ -6,7 +6,7 @@ This repository was built for a technical assessment. The functional brief (prod
 
 ## Demo
 
-Both recordings are of the running stack: the Next.js app on `localhost:3000` talking to the NestJS API on `localhost:3001`.
+Both recordings are of the running stack: the Next.js app on `localhost:3005` talking to the NestJS API on `localhost:5001`.
 
 **Catalog — search, filter and create a product.** A search with no match shows the empty state, the category select filters the list, a row opens the product page, and the form creates the product that was missing.
 
