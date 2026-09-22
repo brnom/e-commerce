@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev",
-    "start": "next start",
+    "dev": "next dev --port ${WEB_PORT:-3005}",
+    "start": "next start --port ${PORT:-3005}",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

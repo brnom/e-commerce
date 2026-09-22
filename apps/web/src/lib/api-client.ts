@@ -9,7 +9,7 @@ export class ApiError extends Error {
 }
 
 export function getApiBaseUrl(): string {
-  return process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:3001'
+  return process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:5001'
 }
 
 async function unwrap<T>(response: Response): Promise<T> {

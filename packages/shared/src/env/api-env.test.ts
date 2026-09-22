@@ -6,8 +6,8 @@ describe('parseApiEnv', () => {
   it('applies defaults for optional variables', () => {
     const env = parseApiEnv({ DATABASE_URL: 'postgresql://localhost/app' })
 
-    expect(env.API_PORT).toBe(3001)
-    expect(env.WEB_ORIGIN).toBe('http://localhost:3000')
+    expect(env.API_PORT).toBe(5001)
+    expect(env.WEB_ORIGIN).toBe('http://localhost:3005')
   })
 
   it('names the missing variable when DATABASE_URL is absent', () => {
