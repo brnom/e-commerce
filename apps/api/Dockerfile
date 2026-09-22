@@ -1,4 +1,4 @@
-FROM node:24-alpine AS base
+FROM node:26-alpine AS base
 RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
 WORKDIR /repo
 
@@ -14,7 +14,7 @@ RUN pnpm --filter @ecommerce/shared build \
  && pnpm --filter api build \
  && pnpm --filter api deploy --prod --legacy /prod/api
 
-FROM node:24-alpine AS runtime
+FROM node:26-alpine AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=build --chown=node:node /prod/api ./
