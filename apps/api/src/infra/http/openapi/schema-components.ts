@@ -27,6 +27,7 @@ import {
   invalidImportFileErrorSchema,
   notFoundErrorSchema,
   unavailableItemsErrorSchema,
+  uploadTooLargeErrorSchema,
   validationErrorSchema,
 } from './error-schemas'
 
@@ -58,6 +59,7 @@ const components: ReadonlyArray<readonly [string, ZodType]> = [
   ['ConflictError', conflictErrorSchema],
   ['UnavailableItemsError', unavailableItemsErrorSchema],
   ['InvalidImportFileError', invalidImportFileErrorSchema],
+  ['UploadTooLargeError', uploadTooLargeErrorSchema],
 ]
 
 export const SCHEMA_COMPONENT_IDS = components.map(([id]) => id)

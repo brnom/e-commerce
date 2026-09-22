@@ -143,12 +143,21 @@ describe('imports HTTP contract', () => {
     const response = await api().post('/imports').field('name', 'x')
 
     expect(response.status).toBe(400)
+    expect(response.body).toEqual({
+      message: 'A CSV file is required in the "file" field',
+      missingColumns: [],
+    })
   })
 
   it('rejects a file larger than 2 MB', async () => {
     const response = await uploadText(header + 'A,A-1,,,1,1,\n'.repeat(200_000))
 
     expect(response.status).toBe(413)
+    expect(response.body).toEqual({
+      message: 'File too large',
+      error: 'Payload Too Large',
+      statusCode: 413,
+    })
   })
 
   it('rejects a file with more than 5000 data rows', async () => {

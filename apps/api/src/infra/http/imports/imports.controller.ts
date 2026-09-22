@@ -1,13 +1,5 @@
 import { importJobSchema, importJobSummarySchema } from '@ecommerce/shared'
-import {
-  BadRequestException,
-  Controller,
-  Get,
-  Param,
-  Post,
-  UploadedFile,
-  UseInterceptors,
-} from '@nestjs/common'
+import { Controller, Get, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import {
   ApiBody,
@@ -20,14 +12,21 @@ import {
 } from '@nestjs/swagger'
 
 import { ImportJobIdPipe } from './import-job-id.pipe'
-import { ApiInvalidImportFile, ApiResourceNotFound } from '../openapi/api-responses'
+import {
+  ApiInvalidImportFile,
+  ApiResourceNotFound,
+  ApiUploadTooLarge,
+} from '../openapi/api-responses'
 import { GetImportJob } from '@/application/imports/get-import-job'
 import { ImportProducts } from '@/application/imports/import-products'
 import { ListImportJobs } from '@/application/imports/list-import-jobs'
+import { InvalidImportFileError } from '@/domain/shared/domain-error'
 
 import type { ImportJob, ImportJobSummary } from '@/domain/import/import-job'
 
 export const MAX_IMPORT_FILE_BYTES = 2 * 1024 * 1024
+
+const MAX_IMPORT_FILE_MEGABYTES = MAX_IMPORT_FILE_BYTES / 1024 / 1024
 
 interface UploadedCsv {
   readonly originalname: string
@@ -48,7 +47,7 @@ export class ImportsController {
   @ApiOperation({ summary: 'Import products from a CSV file, upserting by SKU' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
-    description: `The CSV file, at most ${MAX_IMPORT_FILE_BYTES / 1024 / 1024} MB`,
+    description: `The CSV file, at most ${MAX_IMPORT_FILE_MEGABYTES} MB`,
     required: true,
     schema: {
       type: 'object',
@@ -61,9 +60,10 @@ export class ImportsController {
     standardSchema: importJobSchema,
   })
   @ApiInvalidImportFile()
+  @ApiUploadTooLarge(MAX_IMPORT_FILE_MEGABYTES)
   upload(@UploadedFile() file: UploadedCsv | undefined): Promise<ImportJob> {
     if (!file) {
-      throw new BadRequestException('A CSV file is required in the "file" field')
+      throw new InvalidImportFileError('A CSV file is required in the "file" field')
     }
     return this.importProducts.execute({ fileName: file.originalname, content: file.buffer })
   }
