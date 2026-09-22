@@ -98,7 +98,7 @@ apps/
   api/                 NestJS REST API
     src/domain/        entities, value objects, domain errors (no framework imports)
     src/application/   ports (interfaces + injection tokens) and use cases, with in-memory fakes for tests
-    src/infra/         NestJS modules, HTTP controllers/pipes/filters, Prisma adapters, fake payment gateway, env config
+    src/infra/         NestJS modules, HTTP controllers/pipes/filters, the OpenAPI document, Prisma adapters, fake payment gateway, env config
     src/main.ts        bootstrap; with app.module.ts, the composition root
     prisma/            schema and migrations
     test/              integration tests that boot the Nest application
@@ -123,6 +123,8 @@ docker-compose.yml     db + api + web
 ## API
 
 Every endpoint is JSON over HTTP, unauthenticated, on `http://localhost:5001` by default. Validation failures answer `400` with one entry per failing field; an unknown id answers `404`; a conflict answers `409`.
+
+The whole contract is browsable and callable at [`/docs`](http://localhost:5001/docs) — Swagger UI generated from the routes and the shared zod schemas, with the raw OpenAPI document at `/docs/json`.
 
 | Method   | Path            | Purpose                                                                                                                                                                                                                                                                                                                     |
 | -------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -154,6 +156,7 @@ The architectural choices, with the alternatives that were weighed, are in each 
 - **PostgreSQL + Prisma 7.** Transactional guarantees for stock reservation and text-search extensions later; migrations that run identically locally, in CI and in the container. Rejected: TypeORM (entities drift), Drizzle (younger Nest story), SQLite (no concurrency semantics).
 - **Hexagonal API layout with NestJS confined to `infra/`.** Business rules are plain TypeScript, constructed directly in unit tests; Nest modules bind ports to adapters. Rejected: Nest's conventional feature-module layout (rules end up decorated and coupled to Nest and Prisma).
 - **One zod schema per DTO, shared by API and web.** Rejected: class-validator (cannot be consumed by the browser), OpenAPI codegen (a build step for one team).
+- **OpenAPI generated from those same schemas.** `@nestjs/swagger` reads the routes and the zod schema each one already validates with, so `/docs` cannot drift from what the API accepts: a rule changes in `packages/shared` and the page changes with it. Rejected: a hand-written specification (a second contract to keep in sync) and DTO classes decorated with `@ApiProperty` (every shape written twice, and validation splitting from documentation).
 - **Migrations in the API container entrypoint.** A fresh `up` on an empty volume needs no extra step, and a failing migration stops the API from serving. Rejected: a separate one-shot migrate service.
 
 **Product catalog**
@@ -223,7 +226,7 @@ Endpoints: `POST /orders` (`{ items: [{ productId, quantity }], customer: { name
 
 ## Security and scope
 
-This is a demonstration system, and it is open on purpose: **there is no authentication, no authorization and no rate limiting**. Anyone who can reach the API can read and write the catalog, import a file and place an order. Run it locally; do not expose it to a network as it stands.
+This is a demonstration system, and it is open on purpose: **there is no authentication, no authorization and no rate limiting**. Anyone who can reach the API can read and write the catalog, import a file and place an order, and `/docs` describes that surface to them. Run it locally; do not expose it to a network as it stands.
 
 What the code does defend, because it shaped how the rest was written:
 
@@ -258,13 +261,14 @@ Dependencies are watched by Dependabot (npm, GitHub Actions and both Dockerfiles
 | `purchase`             | archived | cart, checkout, orders API with stock reservation, fake payment                         |
 | `purchase-ux`          | archived | one-click checkout with test-card selector, steppers, confirmed removal, pressed states |
 
-Three smaller changes shipped after `purchase-ux` as plain pull requests. None of them added behavior worth a spec, so none got an OpenSpec change of its own:
+Four smaller changes shipped after `purchase-ux` as plain pull requests. None of them added behavior worth a spec, so none got an OpenSpec change of its own:
 
 | Change                  | State     | Delivers                                                                      |
 | ----------------------- | --------- | ----------------------------------------------------------------------------- |
 | `demo-recordings`       | merged    | the two GIFs in [Demo](#demo)                                                 |
 | `env-driven-ports`      | merged    | `API_PORT` and `WEB_PORT` read from the environment by `pnpm dev` and Compose |
 | `ui-interaction-states` | in review | hover, press and focus feedback in every control                              |
+| `api-openapi-docs`      | in review | Swagger UI at `/docs`, generated from the routes and the shared zod schemas   |
 
 ## License
 
