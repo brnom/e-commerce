@@ -21,7 +21,9 @@ ENV HOSTNAME=0.0.0.0
 ARG WEB_PORT=3005
 ENV PORT=$WEB_PORT
 WORKDIR /app
-COPY --from=build /repo/apps/web/.next/standalone ./
-COPY --from=build /repo/apps/web/.next/static ./apps/web/.next/static
+COPY --from=build --chown=node:node /repo/apps/web/.next/standalone ./
+COPY --from=build --chown=node:node /repo/apps/web/.next/static ./apps/web/.next/static
+RUN mkdir -p apps/web/.next/cache && chown -R node:node apps/web/.next
 EXPOSE $WEB_PORT
+USER node
 CMD ["node", "apps/web/server.js"]

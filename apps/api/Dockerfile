@@ -17,7 +17,8 @@ RUN pnpm --filter @ecommerce/shared build \
 FROM node:24-alpine AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
-COPY --from=build /prod/api ./
+COPY --from=build --chown=node:node /prod/api ./
 ARG API_PORT=5001
 EXPOSE $API_PORT
+USER node
 CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/main.js"]
