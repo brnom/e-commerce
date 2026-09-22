@@ -1,10 +1,12 @@
 import Link from 'next/link'
 
 import { ApiHealth } from '@/components/api-health'
+import { CartLink } from '@/components/cart/cart-link'
 
 const links = [
   { href: '/products', label: 'Products' },
   { href: '/imports', label: 'Imports' },
+  { href: '/orders', label: 'Orders' },
 ]
 
 export function SiteHeader() {
@@ -29,6 +31,9 @@ export function SiteHeader() {
                 </Link>
               </li>
             ))}
+            <li>
+              <CartLink className="text-xs font-medium tracking-wider uppercase underline-offset-4 hover:underline sm:text-sm" />
+            </li>
           </ul>
           <ApiHealth className="hidden text-muted-foreground sm:inline-flex" />
         </nav>
