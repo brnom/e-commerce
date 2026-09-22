@@ -2,8 +2,8 @@ import { z } from 'zod'
 
 export const apiEnvSchema = z.object({
   DATABASE_URL: z.string().min(1),
-  API_PORT: z.coerce.number().int().positive().default(3001),
-  WEB_ORIGIN: z.url().default('http://localhost:3000'),
+  API_PORT: z.coerce.number().int().positive().default(5001),
+  WEB_ORIGIN: z.url().default('http://localhost:3005'),
 })
 
 export type ApiEnv = z.infer<typeof apiEnvSchema>

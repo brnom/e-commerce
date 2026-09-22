@@ -17,7 +17,7 @@
       "dependsOn": ["^build"],
       "cache": false,
       "persistent": true,
-      "env": ["DATABASE_URL", "API_PORT", "WEB_ORIGIN", "NEXT_PUBLIC_API_URL"]
+      "env": ["DATABASE_URL", "API_PORT", "WEB_PORT", "WEB_ORIGIN", "NEXT_PUBLIC_API_URL"]
     },
     "lint": {
       "dependsOn": ["^build", "db:generate"]

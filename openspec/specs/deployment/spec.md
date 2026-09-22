@@ -11,7 +11,7 @@ The platform SHALL start the database, the API and the web application from a cl
 
 #### Scenario: Fresh clone
 - **WHEN** a user runs `docker compose up` in a fresh clone with Docker installed and nothing else configured
-- **THEN** the database, API and web application containers start and the web application is reachable on http://localhost:3000
+- **THEN** the database, API and web application containers start and the web application is reachable on http://localhost:3005
 
 #### Scenario: Restart with existing data
 - **WHEN** the stack is stopped and started again with `docker compose up`

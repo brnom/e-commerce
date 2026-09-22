@@ -17,8 +17,8 @@ docker compose up --build
 
 Then open:
 
-- Web app: http://localhost:3000
-- API health: http://localhost:3001/health
+- Web app: http://localhost:3005
+- API health: http://localhost:5001/health
 
 The API applies pending database migrations before it starts listening; the database keeps its data in the `pgdata` volume across restarts. Use `docker compose down -v` to start from an empty database.
 
@@ -31,7 +31,7 @@ cp .env.example .env
 pnpm dev
 ```
 
-`pnpm dev` starts the API on port 3001 with hot reload and the web app on port 3000. The Prisma client is generated automatically as part of the Turborepo task graph. The API watcher does not reload `packages/shared`; after editing a shared schema, restart `pnpm dev`.
+`pnpm dev` starts the API on port 5001 with hot reload and the web app on port 3005. The Prisma client is generated automatically as part of the Turborepo task graph. The API watcher does not reload `packages/shared`; after editing a shared schema, restart `pnpm dev`.
 
 The API's integration tests run against a real PostgreSQL database, `ecommerce_test` on the same `db` container (`TEST_DATABASE_URL`). The test run creates that database if it is missing and applies the migrations, so `docker compose up db -d` is the only prerequisite for `pnpm test`. Unit tests need no database: `pnpm --filter api exec vitest run --project unit`.
 
@@ -59,14 +59,17 @@ Defaults work for local development and for Compose. A committed `.env.example` 
 | --------------------- | ------------ | ---------------------------------------------------- | -------------------------------------------------- |
 | `DATABASE_URL`        | api          | `postgresql://app:app@localhost:5432/ecommerce`      | PostgreSQL connection string. Required.            |
 | `TEST_DATABASE_URL`   | api (tests)  | `postgresql://app:app@localhost:5432/ecommerce_test` | Database the integration tests create and migrate. |
-| `API_PORT`            | api          | `3001`                                               | HTTP port the API listens on.                      |
-| `WEB_ORIGIN`          | api          | `http://localhost:3000`                              | Origin allowed by CORS.                            |
-| `NEXT_PUBLIC_API_URL` | web          | `http://localhost:3001`                              | API base URL as seen from the browser. Build-time. |
+| `API_PORT`            | api, compose | `5001`                                               | HTTP port the API listens on.                      |
+| `WEB_PORT`            | web, compose | `3005`                                               | HTTP port the web app listens on.                  |
+| `WEB_ORIGIN`          | api          | `http://localhost:3005`                              | Origin allowed by CORS.                            |
+| `NEXT_PUBLIC_API_URL` | web          | `http://localhost:5001`                              | API base URL as seen from the browser. Build-time. |
 | `POSTGRES_USER`       | compose (db) | `app`                                                | Database user.                                     |
 | `POSTGRES_PASSWORD`   | compose (db) | `app`                                                | Database password.                                 |
 | `POSTGRES_DB`         | compose (db) | `ecommerce`                                          | Database name.                                     |
 
 The API validates its environment at startup and exits with a non-zero status naming any missing or malformed variable.
+
+Both ports come from the environment, so moving the stack is an edit to `.env` and nothing else: `pnpm dev` runs through `dotenv -e .env`, the web dev server takes `WEB_PORT` and the API takes `API_PORT`, and Compose reads the same file for its published ports. Changing a port means changing the URL that names it too — `WEB_ORIGIN` is the origin the API allows through CORS, and `NEXT_PUBLIC_API_URL` is baked into the web bundle at build time.
 
 ## Repository layout
 
@@ -147,7 +150,7 @@ The architectural choices, with the alternatives that were weighed, are in each 
 
 ## CSV import
 
-Upload a file at `/imports`, or `curl -F file=@data/e-commerce_input.csv http://localhost:3001/imports`. The response, and `GET /imports/{id}` later, is the job with one entry per data row.
+Upload a file at `/imports`, or `curl -F file=@data/e-commerce_input.csv http://localhost:5001/imports`. The response, and `GET /imports/{id}` later, is the job with one entry per data row.
 
 | Column        | Required | Rule                                                                  |
 | ------------- | -------- | --------------------------------------------------------------------- |

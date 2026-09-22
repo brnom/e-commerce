@@ -12,7 +12,7 @@ A pnpm/Turborepo monorepo (Node 24, pnpm 10.32.1): `apps/api` (NestJS 12 + Prism
 pnpm install
 docker compose up db -d          # Postgres only; needed for `pnpm dev` and the API integration tests
 cp .env.example .env
-pnpm dev                          # API :3001 (watch) + web :3000; restart after editing packages/shared
+pnpm dev                          # API :5001 (watch) + web :3005; restart after editing packages/shared
 
 pnpm check                        # the CI gate: lint + typecheck + test (all workspaces) + prettier --check
 pnpm lint | pnpm typecheck | pnpm test
@@ -30,7 +30,7 @@ pnpm --filter api db:generate                                    # regenerate cl
 docker compose up --build                                        # full stack; `down -v` for an empty database
 ```
 
-Turbo runs `db:generate` before build/lint/typecheck/test, so a missing Prisma client after a schema change usually means running that task explicitly. Integration tests use `TEST_DATABASE_URL` (default `ecommerce_test` on the same container); the global setup creates the database and applies migrations, and `test/support/db.ts` `resetDatabase` truncates the tables between tests — add new tables there. The web dev server must run on port 3000: the API's CORS only allows `WEB_ORIGIN`.
+Turbo runs `db:generate` before build/lint/typecheck/test, so a missing Prisma client after a schema change usually means running that task explicitly. Integration tests use `TEST_DATABASE_URL` (default `ecommerce_test` on the same container); the global setup creates the database and applies migrations, and `test/support/db.ts` `resetDatabase` truncates the tables between tests — add new tables there. Ports are environment-driven (`API_PORT`, `WEB_PORT` in `.env`, read by the `dev` script through `dotenv -e .env` and by Compose); changing one means changing `WEB_ORIGIN` and `NEXT_PUBLIC_API_URL` with it, since the API's CORS only allows `WEB_ORIGIN`.
 
 ## Lint rules that shape the code
 
