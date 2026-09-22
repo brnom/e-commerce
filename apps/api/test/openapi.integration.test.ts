@@ -106,6 +106,16 @@ describe('OpenAPI document', () => {
     expect(document.paths['/products/{id}']?.get?.responses['404']).toMatchObject({
       content: { 'application/json': { schema: { $ref: '#/components/schemas/NotFoundError' } } },
     })
+    expect(document.paths['/imports']?.post?.responses['400']).toMatchObject({
+      content: {
+        'application/json': { schema: { $ref: '#/components/schemas/InvalidImportFileError' } },
+      },
+    })
+    expect(document.paths['/imports']?.post?.responses['413']).toMatchObject({
+      content: {
+        'application/json': { schema: { $ref: '#/components/schemas/UploadTooLargeError' } },
+      },
+    })
   })
 
   it('documents the CSV upload as multipart with a binary file field', () => {

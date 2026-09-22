@@ -24,6 +24,12 @@ export const invalidImportFileErrorSchema = z.object({
 
 export const unavailableItemsErrorSchema = unavailableItemsBodySchema
 
+export const uploadTooLargeErrorSchema = z.object({
+  message: z.string(),
+  error: z.string(),
+  statusCode: z.literal(413),
+})
+
 const healthIndicators = z.record(z.string(), z.object({ status: z.string() }))
 
 export const healthReportSchema = z.object({

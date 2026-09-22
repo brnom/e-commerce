@@ -1,10 +1,16 @@
-import { ApiBadRequestResponse, ApiConflictResponse, ApiNotFoundResponse } from '@nestjs/swagger'
+import {
+  ApiBadRequestResponse,
+  ApiConflictResponse,
+  ApiNotFoundResponse,
+  ApiPayloadTooLargeResponse,
+} from '@nestjs/swagger'
 
 import {
   conflictErrorSchema,
   invalidImportFileErrorSchema,
   notFoundErrorSchema,
   unavailableItemsErrorSchema,
+  uploadTooLargeErrorSchema,
   validationErrorSchema,
 } from './error-schemas'
 
@@ -36,4 +42,10 @@ export const ApiInvalidImportFile = (): MethodDecorator =>
   ApiBadRequestResponse({
     description: 'The file is missing, unreadable, empty or missing required columns',
     standardSchema: invalidImportFileErrorSchema,
+  })
+
+export const ApiUploadTooLarge = (megabytes: number): MethodDecorator =>
+  ApiPayloadTooLargeResponse({
+    description: `The file is larger than ${megabytes} MB, rejected by the upload interceptor`,
+    standardSchema: uploadTooLargeErrorSchema,
   })
