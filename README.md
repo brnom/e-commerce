@@ -221,6 +221,32 @@ Add products to the cart from the products page or a product's page, review the 
 
 Endpoints: `POST /orders` (`{ items: [{ productId, quantity }], customer: { name, email }, card: { cardholderName, cardNumber, expiry, cvc } }`; `201` with the order in status `paid` or `payment_failed`; `400` with per-field issues; `409` with `items: [{ productId, requested, available, reason }]` when stock is short or a product is unavailable), `GET /orders` (summaries, newest first) and `GET /orders/{id}`. Limits: 50 lines per order, 100 units per line.
 
+## Security and scope
+
+This is a demonstration system, and it is open on purpose: **there is no authentication, no authorization and no rate limiting**. Anyone who can reach the API can read and write the catalog, import a file and place an order. Run it locally; do not expose it to a network as it stands.
+
+What the code does defend, because it shaped how the rest was written:
+
+- **CORS allows exactly one origin**, `WEB_ORIGIN`. The API answers no other browser origin.
+- **Every input is validated twice by the same zod schema** — in the browser before the request is sent, and in the API pipe before the use case runs. Domain errors become `400`/`404`/`409` in a single exception filter, never a stack trace.
+- **Uploads are bounded**: a CSV over 2 MB is rejected with `413` and one over 5,000 data rows with `400`. The file is parsed in memory and never written to disk.
+- **User-supplied text is rendered as text.** `dangerouslySetInnerHTML` is rejected by lint, so a product name carrying markup is escaped by React instead of being filtered on the way in.
+- **Queries are parameterized by Prisma**, and the search term has `%` and `_` escaped so it cannot turn into a wildcard scan.
+- **No card data is stored.** The number, expiry and security code reach the payment port and nowhere else; the order keeps the last four digits.
+- **Both containers run as the unprivileged `node` user**, and the API validates its environment at startup rather than booting with a missing `DATABASE_URL`.
+
+Out of scope, with what each would take:
+
+| Not here                              | What it would need                                                                         |
+| ------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Accounts, sessions, roles             | An auth layer in front of the API and an owner on every write; the cart is anonymous today |
+| Rate limiting and quotas              | A throttler on the API, tighter on `/imports` and `/orders`                                |
+| Observability                         | Structured logs with a request id, traces, metrics behind the health check                 |
+| A real payment provider               | Webhooks, idempotency keys, and the sweeper for orders left `pending` noted in the design  |
+| Refunds, cancellations, shipping, tax | Order state transitions the domain does not model                                          |
+
+Dependencies are watched by Dependabot (npm, GitHub Actions and both Dockerfiles) and by the CodeQL workflow in `.github/`, and `pnpm audit` is clean. Three transitive packages are pinned forward in the root `pnpm.overrides` because their own parents had not released yet: `mysql2` and `deepmerge-ts`, which reach the API image through the Prisma CLI — the CLI ships there so that `prisma migrate deploy` can run at container start — and `file-type`, which comes in with the SWC CLI at build time only.
+
 ## Status
 
 | Change                 | State    | Delivers                                                                                |
