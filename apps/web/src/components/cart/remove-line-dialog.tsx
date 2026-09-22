@@ -16,9 +16,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { cartStore, type CartLine } from '@/lib/cart-store'
-
-const dangerHover =
-  'hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive active:bg-destructive/20 active:text-destructive'
+import { dangerAction } from '@/lib/styles'
 
 export function RemoveLineDialog({ line }: { readonly line: CartLine }) {
   const [open, setOpen] = useState(false)
@@ -30,7 +28,7 @@ export function RemoveLineDialog({ line }: { readonly line: CartLine }) {
           type="button"
           variant="ghost"
           size="icon-sm"
-          className={dangerHover}
+          className={dangerAction}
           aria-label={`Remove ${line.name}`}
         >
           <Trash2 />
@@ -50,7 +48,7 @@ export function RemoveLineDialog({ line }: { readonly line: CartLine }) {
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="outline"
-            className={dangerHover}
+            className={dangerAction}
             onClick={() => cartStore.remove(line.productId)}
           >
             Remove
