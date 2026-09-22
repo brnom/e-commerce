@@ -1,4 +1,4 @@
-FROM node:24-alpine AS base
+FROM node:26-alpine AS base
 RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
 WORKDIR /repo
 
@@ -14,7 +14,7 @@ COPY packages/shared packages/shared
 COPY apps/web apps/web
 RUN pnpm --filter @ecommerce/shared build && pnpm --filter web build
 
-FROM node:24-alpine AS runtime
+FROM node:26-alpine AS runtime
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME=0.0.0.0
