@@ -100,7 +100,7 @@ docker-compose.yml     db + api + web
 
 Each change in this repository was planned before it was built: `openspec/changes/<name>/` holds a proposal (why), a design (how, with alternatives considered), a spec delta (what the system must do, as testable scenarios) and a task list. Archived changes live in `openspec/changes/archive/`, and the accumulated behavior contract lives in `openspec/specs/`.
 
-The architectural choices, with the alternatives that were weighed, are in each change's `design.md`: [`scaffold-monorepo`](openspec/changes/archive/2026-09-20-scaffold-monorepo/design.md), [`products-crud-search`](openspec/changes/archive/2026-09-21-products-crud-search/design.md), [`web-design-system`](openspec/changes/archive/2026-09-21-web-design-system/design.md), [`csv-import`](openspec/changes/archive/2026-09-21-csv-import/design.md) and [`purchase`](openspec/changes/purchase/design.md). In short:
+The architectural choices, with the alternatives that were weighed, are in each change's `design.md`: [`scaffold-monorepo`](openspec/changes/archive/2026-09-20-scaffold-monorepo/design.md), [`products-crud-search`](openspec/changes/archive/2026-09-21-products-crud-search/design.md), [`web-design-system`](openspec/changes/archive/2026-09-21-web-design-system/design.md), [`csv-import`](openspec/changes/archive/2026-09-21-csv-import/design.md) and [`purchase`](openspec/changes/archive/2026-09-22-purchase/design.md). In short:
 
 **Foundation**
 
@@ -183,5 +183,5 @@ Endpoints: `POST /orders` (`{ items: [{ productId, quantity }], customer: { name
 | `products-crud-search` | archived | `Product`/`Category` model, CRUD API, list + search + form UI                           |
 | `web-design-system`    | archived | Tailwind + shadcn/ui, black-and-white typographic UI, detail page                       |
 | `csv-import`           | archived | CSV upload, per-row validation report, upsert by SKU                                    |
-| `purchase`             | applied  | cart, checkout, orders API with stock reservation, fake payment                         |
+| `purchase`             | archived | cart, checkout, orders API with stock reservation, fake payment                         |
 | `purchase-ux`          | applied  | one-click checkout with test-card selector, steppers, confirmed removal, pressed states |
