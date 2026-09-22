@@ -3,14 +3,10 @@
   "ui": "tui",
   "globalEnv": ["NODE_ENV"],
   "tasks": {
-    "db:generate": {
-      "cache": false,
-      "env": ["DATABASE_URL"]
-    },
     "build": {
-      "dependsOn": ["^build", "db:generate"],
+      "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env.example"],
-      "env": ["NEXT_PUBLIC_API_URL", "DATABASE_URL"],
+      "env": ["NEXT_PUBLIC_API_URL"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "dev": {
@@ -20,16 +16,16 @@
       "env": ["DATABASE_URL", "API_PORT", "WEB_PORT", "WEB_ORIGIN", "NEXT_PUBLIC_API_URL"]
     },
     "lint": {
-      "dependsOn": ["^build", "db:generate"]
+      "dependsOn": ["^build"]
     },
     "lint:fix": {
-      "dependsOn": ["^build", "db:generate"]
+      "dependsOn": ["^build"]
     },
     "typecheck": {
-      "dependsOn": ["^build", "db:generate"]
+      "dependsOn": ["^build"]
     },
     "test": {
-      "dependsOn": ["^build", "db:generate"],
+      "dependsOn": ["^build"],
       "env": ["DATABASE_URL", "TEST_DATABASE_URL"]
     }
   }

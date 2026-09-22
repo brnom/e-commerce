@@ -3,7 +3,12 @@
 **/.next
 **/coverage
 **/.turbo
-**/src/generated
+**/.venv
+**/__pycache__
+**/.mypy_cache
+**/.ruff_cache
+**/.pytest_cache
+**/.import_linter_cache
 .git
 .env
 .env.*
