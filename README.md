@@ -75,17 +75,19 @@ apps/
   api/                 NestJS REST API
     src/domain/        entities, value objects, domain errors (no framework imports)
     src/application/   ports (interfaces + injection tokens) and use cases, with in-memory fakes for tests
-    src/infra/         NestJS modules, HTTP controllers/pipes/filters, Prisma adapters, env config
+    src/infra/         NestJS modules, HTTP controllers/pipes/filters, Prisma adapters, fake payment gateway, env config
     src/main.ts        bootstrap; with app.module.ts, the composition root
     prisma/            schema and migrations
     test/              integration tests that boot the Nest application
   web/                 Next.js App Router application, client-side rendered
-    src/app/           routes (/, /products, /products/new, /products/[id], /products/[id]/edit, /imports, /imports/[id]), globals.css tokens
+    src/app/           routes (/, /products, /products/new, /products/[id], /products/[id]/edit, /imports, /imports/[id], /cart, /checkout, /orders, /orders/[id]), globals.css tokens
     src/components/ui/ shadcn/ui components (generated, then owned)
     src/components/layout/ header, footer, page header
     src/components/products/ table, filters, form, detail page, delete dialog, states
     src/components/imports/  upload card, import history, per-row report
-    src/lib/           API client, typed product and import endpoints, URL state for the list, fonts
+    src/components/cart/     add-to-cart button, header cart link, cart page, checkout page
+    src/components/orders/   order history, order page, status badge
+    src/lib/           API client, typed product/import/order endpoints, URL state for the list, browser cart store, fonts
     src/fonts/         vendored Archivo (display); Geist comes from the `geist` package
 packages/
   shared/              zod schemas and TypeScript types used by both apps
@@ -98,7 +100,7 @@ docker-compose.yml     db + api + web
 
 Each change in this repository was planned before it was built: `openspec/changes/<name>/` holds a proposal (why), a design (how, with alternatives considered), a spec delta (what the system must do, as testable scenarios) and a task list. Archived changes live in `openspec/changes/archive/`, and the accumulated behavior contract lives in `openspec/specs/`.
 
-The architectural choices, with the alternatives that were weighed, are in each change's `design.md`: [`scaffold-monorepo`](openspec/changes/archive/2026-09-20-scaffold-monorepo/design.md), [`products-crud-search`](openspec/changes/archive/2026-09-21-products-crud-search/design.md), [`web-design-system`](openspec/changes/archive/2026-09-21-web-design-system/design.md) and [`csv-import`](openspec/changes/archive/2026-09-21-csv-import/design.md). In short:
+The architectural choices, with the alternatives that were weighed, are in each change's `design.md`: [`scaffold-monorepo`](openspec/changes/archive/2026-09-20-scaffold-monorepo/design.md), [`products-crud-search`](openspec/changes/archive/2026-09-21-products-crud-search/design.md), [`web-design-system`](openspec/changes/archive/2026-09-21-web-design-system/design.md), [`csv-import`](openspec/changes/archive/2026-09-21-csv-import/design.md) and [`purchase`](openspec/changes/purchase/design.md). In short:
 
 **Foundation**
 
@@ -132,6 +134,16 @@ The architectural choices, with the alternatives that were weighed, are in each 
 - **One transaction per file, owned by a single port method.** The use case parses and validates in memory and hands a plan (writes plus rejected rows) to `ImportJobRepository.commit`, which upserts the products, resolves categories and records the job in one interactive transaction. The history never claims products that are not there. Rejected: a generic unit-of-work port threaded through every repository, for one caller.
 - **Every import is recorded** (`ImportJob` with counters and the row report as JSON) so a past report can be reopened from `/imports`.
 
+**Purchase**
+
+- **Reserve, charge, settle — in two transactions.** `POST /orders` first reserves stock for every line in one transaction (a conditional `UPDATE … WHERE stock >= quantity` per product, processed in a fixed order so concurrent orders cannot deadlock), then calls the payment provider outside any transaction, then settles: `paid` with the provider's reference, or `payment_failed` with the reason and every line's stock put back. Holding the transaction open across the provider call would keep row locks for the length of an external request. The conditional update is what makes overselling impossible: the second of two concurrent orders for the last unit finds `stock >= 1` false once the first commits. Rejected: `SELECT … FOR UPDATE` (same guarantee, raw SQL and a second round trip), an optimistic version column (a retry loop for a problem the row lock already solves).
+- **One short item rejects the whole order.** The response is `409` listing every problem item with the requested and available quantities and a reason (`insufficient_stock` or `unavailable` for a deleted or unknown product); nothing is written. The checkout page applies that list to the cart — removing what is gone, lowering what is short — and says so before the user tries again. Rejected: partial fulfilment (the customer did not ask for half an order).
+- **A declined payment is an outcome, not an error.** The order was created and is visible in the history, so `POST /orders` answers `201` whether the card was approved or declined; `status` carries the result. Rejected: `402 Payment Required` (the client would have to fish a successful write out of an error body).
+- **The payment provider is a port with a deterministic fake adapter.** `4242 4242 4242 4242` (or any other valid number) approves, `4000 0000 0000 0002` is declined, `4000 0000 0000 9995` has insufficient funds — the widely known test numbers, which pass the Luhn check the form and API enforce. Rejected: random outcomes (not reproducible in tests or demos) and always-approve (the stock-release path would be untested code).
+- **No card data is stored.** The card number, expiry and security code go to the gateway and nowhere else; the order keeps the last four digits. A crash between reservation and settlement leaves an order `pending` with its stock held; that state is visible in `/orders` and, with a real provider, would get a sweeper.
+- **Order lines are a snapshot.** Each line records the SKU, name and unit price at purchase time, and totals are computed in integer cents, so a later price change or deletion never rewrites an order and `3 × 19.99` is `59.97`. The line keeps a foreign key to the product — the reason products are soft-deleted rather than removed.
+- **The cart lives in the browser.** It is a `localStorage`-backed store read through `useSyncExternalStore`, holding a display snapshot per line; the order is priced by the API from the catalog, never from the cart. Rejected: a server-side cart (a session or customer concept the product does not have) and holding stock while items sit in a cart.
+
 ## CSV import
 
 Upload a file at `/imports`, or `curl -F file=@data/e-commerce_input.csv http://localhost:3001/imports`. The response, and `GET /imports/{id}` later, is the job with one entry per data row.
@@ -150,12 +162,24 @@ Header names are matched case-insensitively; unknown columns are ignored. UTF-8 
 
 The sample file `data/e-commerce_input.csv` (downloaded on **2026-09-20**) has 97 data rows and imports as **87 created, 2 skipped, 8 failed**: `$29.99` and `free` as prices, `-5` stock, an empty and a whitespace-only name, and three later duplicates of `RS-001` / `BS-021`. Importing it a second time gives 87 updated. That outcome is asserted by `apps/api/test/imports.integration.test.ts`.
 
+## Purchase
+
+Add products to the cart from the products page or a product's page, review the cart at `/cart`, and pay at `/checkout` with a name, an email and a card. Orders appear at `/orders` and each order has a page with its lines, total, status and card's last four digits. The payment provider is simulated; use these card numbers with any future expiry (`MM/YY`) and any 3–4 digit security code:
+
+| Card number           | Outcome                                                          |
+| --------------------- | ---------------------------------------------------------------- |
+| `4242 4242 4242 4242` | Approved (as is any other number passing the Luhn check)         |
+| `4000 0000 0000 0002` | Declined — "Your card was declined"; stock is put back           |
+| `4000 0000 0000 9995` | Declined — "Your card has insufficient funds"; stock is put back |
+
+Endpoints: `POST /orders` (`{ items: [{ productId, quantity }], customer: { name, email }, card: { cardholderName, cardNumber, expiry, cvc } }`; `201` with the order in status `paid` or `payment_failed`; `400` with per-field issues; `409` with `items: [{ productId, requested, available, reason }]` when stock is short or a product is unavailable), `GET /orders` (summaries, newest first) and `GET /orders/{id}`. Limits: 50 lines per order, 100 units per line.
+
 ## Status
 
-| Change                 | State     | Delivers                                                          |
-| ---------------------- | --------- | ----------------------------------------------------------------- |
-| `scaffold-monorepo`    | archived  | monorepo, API + web skeletons, Postgres, Docker, CI, this file    |
-| `products-crud-search` | archived  | `Product`/`Category` model, CRUD API, list + search + form UI     |
-| `web-design-system`    | archived  | Tailwind + shadcn/ui, black-and-white typographic UI, detail page |
-| `csv-import`           | archived  | CSV upload, per-row validation report, upsert by SKU              |
-| `purchase`             | planned   | orders, stock reservation, fake payment provider, purchase UI     |
+| Change                 | State    | Delivers                                                          |
+| ---------------------- | -------- | ----------------------------------------------------------------- |
+| `scaffold-monorepo`    | archived | monorepo, API + web skeletons, Postgres, Docker, CI, this file    |
+| `products-crud-search` | archived | `Product`/`Category` model, CRUD API, list + search + form UI     |
+| `web-design-system`    | archived | Tailwind + shadcn/ui, black-and-white typographic UI, detail page |
+| `csv-import`           | archived | CSV upload, per-row validation report, upsert by SKU              |
+| `purchase`             | applied  | cart, checkout, orders API with stock reservation, fake payment   |
