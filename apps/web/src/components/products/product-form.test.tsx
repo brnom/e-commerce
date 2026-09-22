@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ProductForm } from './product-form'
@@ -70,6 +71,37 @@ describe('ProductForm', () => {
 
     await vi.waitFor(() => expect(onSubmit).toHaveBeenCalled())
     expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({ weightKg: null, price: 25, stock: 10 })
+  })
+
+  it('follows fresh values while keeping fields the user already edited', async () => {
+    stubApi([{ path: /\/categories$/, body: [] }])
+    const product = {
+      sku: 'RS-001',
+      name: 'Running Shoes',
+      price: 89.99,
+      stock: 150,
+      weightKg: 0.5,
+    }
+    function Harness() {
+      const [values, setValues] = useState(product)
+      return (
+        <>
+          <ProductForm submitLabel="Save" onSubmit={vi.fn()} values={values} />
+          <button type="button" onClick={() => setValues({ ...product, stock: 148 })}>
+            Refetch
+          </button>
+        </>
+      )
+    }
+    renderWithQuery(<Harness />)
+    const user = userEvent.setup()
+
+    await user.clear(screen.getByLabelText('Name'))
+    await user.type(screen.getByLabelText('Name'), 'Trail Shoes')
+    await user.click(screen.getByRole('button', { name: 'Refetch' }))
+
+    await vi.waitFor(() => expect(screen.getByLabelText('Stock')).toHaveValue(148))
+    expect(screen.getByLabelText('Name')).toHaveValue('Trail Shoes')
   })
 
   it('offers existing categories as suggestions', async () => {

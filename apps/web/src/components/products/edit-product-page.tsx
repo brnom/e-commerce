@@ -42,7 +42,7 @@ export function EditProductPage({ productId }: { readonly productId: string }) {
       {product.data && (
         <ProductForm
           submitLabel="Save changes"
-          defaultValues={{
+          values={{
             sku: product.data.sku,
             name: product.data.name,
             description: product.data.description ?? '',
