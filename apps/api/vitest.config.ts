@@ -25,20 +25,16 @@ export default defineConfig({
     passWithNoTests: true,
     projects: [
       {
-        plugins: [swcPlugin],
-        resolve,
         test: { name: 'unit', include: ['src/**/*.test.ts'], environment: 'node', env: unitEnv },
       },
       {
-        plugins: [swcPlugin],
-        resolve,
         test: {
           name: 'integration',
           include: ['test/**/*.test.ts'],
           environment: 'node',
           env: integrationEnv,
           pool: 'forks',
-          poolOptions: { forks: { singleFork: true } },
+          fileParallelism: false,
           globalSetup: ['./test/support/global-setup.ts'],
         },
       },
