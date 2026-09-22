@@ -138,7 +138,7 @@ export function ImportReportPage({ importId }: { readonly importId: string }) {
                 variant="outline"
                 size="sm"
                 aria-pressed={problemsOnly}
-                className="aria-pressed:bg-primary aria-pressed:text-primary-foreground"
+                className="aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary/85"
                 onClick={() => setProblemsOnly((value) => !value)}
               >
                 Problems only
