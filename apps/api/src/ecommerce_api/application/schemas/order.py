@@ -17,7 +17,6 @@ from ecommerce_api.application.schemas.rules import (
 )
 
 MAX_ORDER_ITEMS: Final = 50
-MAX_ITEM_QUANTITY: Final = 100
 
 EXPIRY = re.compile(r'(0[1-9]|1[0-2])/([0-9]{2})')
 CARD_DIGITS = re.compile(r'[0-9]{13,19}')
@@ -65,8 +64,6 @@ def quantity_rule(value: object) -> int:
             integer_message='Quantity must be a whole number',
             minimum=1,
             min_message='Quantity must be at least 1',
-            maximum=MAX_ITEM_QUANTITY,
-            max_message=f'Quantity must be at most {MAX_ITEM_QUANTITY}',
         )
     )
 
@@ -155,7 +152,7 @@ class OrderItemInput(InputModel):
     quantity: Annotated[
         int,
         BeforeValidator(quantity_rule),
-        WithJsonSchema({'type': 'integer', 'minimum': 1, 'maximum': MAX_ITEM_QUANTITY}),
+        WithJsonSchema({'type': 'integer', 'minimum': 1}),
     ]
 
 
