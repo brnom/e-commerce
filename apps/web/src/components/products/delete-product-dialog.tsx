@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { deleteProduct, productKeys } from '@/lib/products-api'
+import { dangerAction } from '@/lib/styles'
 
 import type { ComponentProps } from 'react'
 
@@ -26,9 +27,6 @@ interface Props {
   readonly variant?: ComponentProps<typeof Button>['variant']
   readonly size?: ComponentProps<typeof Button>['size']
 }
-
-const dangerHover =
-  'hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive active:bg-destructive/20 active:text-destructive'
 
 export function DeleteProductDialog({
   productId,
@@ -54,7 +52,7 @@ export function DeleteProductDialog({
         <Button
           variant={variant}
           size={size}
-          className={dangerHover}
+          className={dangerAction}
           aria-label={`Delete ${productName}`}
         >
           Delete
@@ -73,7 +71,7 @@ export function DeleteProductDialog({
           <AlertDialogCancel disabled={mutation.isPending}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="outline"
-            className={dangerHover}
+            className={dangerAction}
             disabled={mutation.isPending}
             onClick={(event) => {
               event.preventDefault()
