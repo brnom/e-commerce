@@ -1,14 +1,28 @@
 'use client'
 
-import { placeOrderSchema, type PlaceOrderInput, type UnavailableItem } from '@ecommerce/shared'
+import {
+  approvedTestCard,
+  findTestCard,
+  placeOrderSchema,
+  type PlaceOrderInput,
+  type UnavailableItem,
+} from '@ecommerce/shared'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import { useForm, type FieldPath } from 'react-hook-form'
+import { useEffect, useState } from 'react'
+import { useForm, useWatch, type FieldPath } from 'react-hook-form'
 
 import { CartEmptyState, CartLinesTable, CartTotal } from './cart-page'
+import {
+  CUSTOM_CARD,
+  TestCardSelect,
+  TestCardTile,
+  emptyCardValues,
+  testCardValues,
+  type CardSelection,
+} from './test-card-select'
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
@@ -22,8 +36,8 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { ApiError } from '@/lib/api-client'
-import { cartStore, useCart, type CartLine } from '@/lib/cart-store'
-import { formatShortId } from '@/lib/format'
+import { cartStore, cartTotal, useCart, type CartLine } from '@/lib/cart-store'
+import { formatMoney, formatShortId } from '@/lib/format'
 import { orderKeys, placeOrder } from '@/lib/orders-api'
 import { productKeys } from '@/lib/products-api'
 
@@ -67,9 +81,16 @@ function describeAdjustments(
   }))
 }
 
-const emptyValues: CheckoutFormValues = {
-  customer: { name: '', email: '' },
-  card: { cardholderName: '', cardNumber: '', expiry: '', cvc: '' },
+const sampleCustomer: CheckoutFormValues['customer'] = {
+  name: 'Ada Lovelace',
+  email: 'ada@example.com',
+}
+
+const cardFields = ['cardholderName', 'cardNumber', 'expiry', 'cvc'] as const
+
+const initialValues: CheckoutFormValues = {
+  customer: sampleCustomer,
+  card: testCardValues(approvedTestCard, sampleCustomer.name),
 }
 
 export function CheckoutPage() {
@@ -78,11 +99,34 @@ export function CheckoutPage() {
   const lines = useCart()
   const [declined, setDeclined] = useState<Declined | null>(null)
   const [adjustments, setAdjustments] = useState<Adjustment[]>([])
+  const [selection, setSelection] = useState<CardSelection>(approvedTestCard.id)
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutFormSchema),
-    defaultValues: emptyValues,
+    defaultValues: initialValues,
   })
   const { errors, isSubmitting } = form.formState
+  const selectedCard = selection === CUSTOM_CARD ? undefined : findTestCard(selection)
+  const customerName = useWatch({ control: form.control, name: 'customer.name' })
+  const expiry = useWatch({ control: form.control, name: 'card.expiry' })
+
+  useEffect(() => {
+    if (selectedCard) form.setValue('card.cardholderName', customerName)
+  }, [form, selectedCard, customerName])
+
+  function selectCard(next: CardSelection) {
+    setSelection(next)
+    const card = next === CUSTOM_CARD ? undefined : findTestCard(next)
+    form.setValue(
+      'card',
+      card ? testCardValues(card, form.getValues('customer.name')) : emptyCardValues,
+    )
+    form.clearErrors('card')
+  }
+
+  const cardIssues = cardFields.flatMap((field) => {
+    const message = errors.card?.[field]?.message
+    return message ? [message] : []
+  })
 
   const mutation = useMutation({
     mutationFn: placeOrder,
@@ -212,79 +256,91 @@ export function CheckoutPage() {
                 </fieldset>
                 <fieldset className="grid gap-6">
                   <legend className="mb-4 font-mono text-xs tracking-wider text-muted-foreground uppercase">
-                    Card
+                    Payment
                   </legend>
-                  <FormField
-                    control={form.control}
-                    name="card.cardholderName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cardholder name</FormLabel>
-                        <FormControl>
-                          <Input {...field} autoComplete="cc-name" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="card.cardNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Card number</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            inputMode="numeric"
-                            autoComplete="cc-number"
-                            placeholder="4242 4242 4242 4242"
-                            className="font-mono"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid gap-6 sm:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="card.expiry"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Expiry</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              inputMode="numeric"
-                              autoComplete="cc-exp"
-                              placeholder="MM/YY"
-                              className="font-mono"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                  <TestCardSelect value={selection} onChange={selectCard} />
+                  {selectedCard ? (
+                    <TestCardTile
+                      card={selectedCard}
+                      cardholderName={customerName}
+                      expiry={expiry}
+                      issues={cardIssues}
                     />
-                    <FormField
-                      control={form.control}
-                      name="card.cvc"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Security code</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              inputMode="numeric"
-                              autoComplete="cc-csc"
-                              className="font-mono"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  ) : (
+                    <div className="grid animate-in gap-6 fade-in">
+                      <FormField
+                        control={form.control}
+                        name="card.cardholderName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Cardholder name</FormLabel>
+                            <FormControl>
+                              <Input {...field} autoComplete="cc-name" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="card.cardNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Card number</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                inputMode="numeric"
+                                autoComplete="cc-number"
+                                placeholder="4242 4242 4242 4242"
+                                className="font-mono"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="grid gap-6 sm:grid-cols-2">
+                        <FormField
+                          control={form.control}
+                          name="card.expiry"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Expiry</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  inputMode="numeric"
+                                  autoComplete="cc-exp"
+                                  placeholder="MM/YY"
+                                  className="font-mono"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="card.cvc"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Security code</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  inputMode="numeric"
+                                  autoComplete="cc-csc"
+                                  className="font-mono"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </fieldset>
                 {errors.root && <p role="alert">{errors.root.message}</p>}
               </CardContent>
@@ -297,13 +353,15 @@ export function CheckoutPage() {
                   disabled={isSubmitting || lines.length === 0}
                   className="ml-auto"
                 >
-                  {isSubmitting ? 'Placing order…' : 'Place order'}
+                  {isSubmitting
+                    ? 'Placing order…'
+                    : `Place order · ${formatMoney(cartTotal(lines))}`}
                 </Button>
               </CardFooter>
             </Card>
           </form>
         </Form>
-        <aside className="flex flex-col gap-6">
+        <aside className="flex flex-col gap-6 lg:sticky lg:top-6 lg:self-start">
           <h2 className="display-heading text-2xl">Summary</h2>
           {lines.length > 0 ? (
             <>
