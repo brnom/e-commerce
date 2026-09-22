@@ -95,7 +95,7 @@ An order SHALL have a generated `id`, a `status` (`pending` while payment is in 
 - **THEN** the response is `404`
 
 ### Requirement: Cart
-The web application SHALL keep a cart in the browser that survives page reloads. The products page and the product detail page SHALL offer an add-to-cart action for each product with stock, disabled with an out-of-stock label when `stock` is `0`; after adding, the action SHALL show a transient added confirmation and the header's cart indicator SHALL update. The detail page SHALL let the user choose the quantity with a stepper (decrease, input, increase) bounded from 1 to the product's stock, show the stock figure, and, once a product was added from that page, offer a link to the cart. Adding a product already in the cart SHALL increase its quantity. The cart page at `/cart` SHALL list every line with the product name linking to its detail page, unit price, a quantity stepper, line total and a remove action that asks for confirmation in a dialog before the line is removed; show the cart total; offer a checkout action; and show an empty state leading to the products page when the cart is empty.
+The web application SHALL keep a cart in the browser that survives page reloads. The products page and the product detail page SHALL offer an add-to-cart action for each product with stock, disabled with an out-of-stock label when `stock` is `0`; after adding, the action SHALL show a transient added confirmation and the header's cart indicator SHALL update. The detail page SHALL let the user choose the quantity with a stepper (decrease, input, increase) bounded from 1 to the product's stock, show the stock figure, and, once a product was added from that page, offer a link to the cart. Adding a product already in the cart SHALL increase its quantity, never above the product's stock; once the cart holds all of it, the add-to-cart action SHALL be disabled with an all-in-cart label. The cart page at `/cart` SHALL list every line with the product name linking to its detail page, unit price, a quantity stepper bounded by the product's stock, line total and a remove action that asks for confirmation in a dialog before the line is removed; show the cart total; offer a checkout action; and show an empty state leading to the products page when the cart is empty.
 
 #### Scenario: Add from the detail page
 - **WHEN** a user presses increase once on a product's detail page and activates add to cart
@@ -108,6 +108,10 @@ The web application SHALL keep a cart in the browser that survives page reloads.
 #### Scenario: Adding twice accumulates
 - **WHEN** a product is in the cart with quantity `1` and the user adds it again from the products page
 - **THEN** the cart shows that product once with quantity `2`
+
+#### Scenario: Adding again stops at the stock
+- **WHEN** a product with `stock` `5` is added to the cart with quantity `5` and the user tries to add it again
+- **THEN** the cart keeps that product with quantity `5` and its add-to-cart control is disabled and labelled as all in cart
 
 #### Scenario: Out of stock cannot be added
 - **WHEN** a product with `stock` `0` is shown on the products page or its detail page

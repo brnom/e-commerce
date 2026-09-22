@@ -8,9 +8,11 @@ export interface CartLine {
   readonly name: string
   readonly unitPrice: number
   readonly quantity: number
+  readonly stock?: number
 }
 
-export type CartProduct = Pick<ProductResponse, 'id' | 'sku' | 'name' | 'price'>
+export type CartProduct = Pick<ProductResponse, 'id' | 'sku' | 'name' | 'price'> &
+  Partial<Pick<ProductResponse, 'stock'>>
 
 const STORAGE_KEY = 'cart'
 const EMPTY: readonly CartLine[] = []
@@ -27,8 +29,14 @@ function isCartLine(value: unknown): value is CartLine {
     typeof line['unitPrice'] === 'number' &&
     typeof line['quantity'] === 'number' &&
     Number.isInteger(line['quantity']) &&
-    line['quantity'] > 0
+    line['quantity'] > 0 &&
+    (line['stock'] === undefined ||
+      (typeof line['stock'] === 'number' && Number.isInteger(line['stock'])))
   )
+}
+
+function boundedByStock(quantity: number, stock: number | undefined): number {
+  return stock === undefined ? quantity : Math.min(quantity, stock)
 }
 
 function readStorage(): readonly CartLine[] {
@@ -75,21 +83,21 @@ export class CartStore {
   add(product: CartProduct, quantity: number): void {
     const lines = this.getSnapshot()
     const existing = lines.find((line) => line.productId === product.id)
+    const stock = product.stock ?? existing?.stock
+    const total = boundedByStock((existing?.quantity ?? 0) + quantity, stock)
+    if (total < 1) return
+    const line: CartLine = {
+      productId: product.id,
+      sku: product.sku,
+      name: product.name,
+      unitPrice: product.price,
+      quantity: total,
+      ...(stock === undefined ? {} : { stock }),
+    }
     this.set(
       existing
-        ? lines.map((line) =>
-            line.productId === product.id ? { ...line, quantity: line.quantity + quantity } : line,
-          )
-        : [
-            ...lines,
-            {
-              productId: product.id,
-              sku: product.sku,
-              name: product.name,
-              unitPrice: product.price,
-              quantity,
-            },
-          ],
+        ? lines.map((current) => (current.productId === product.id ? line : current))
+        : [...lines, line],
     )
   }
 
@@ -100,7 +108,9 @@ export class CartStore {
     }
     this.set(
       this.getSnapshot().map((line) =>
-        line.productId === productId ? { ...line, quantity } : line,
+        line.productId === productId
+          ? { ...line, quantity: Math.max(1, boundedByStock(quantity, line.stock)) }
+          : line,
       ),
     )
   }
@@ -120,7 +130,9 @@ export class CartStore {
         const item = byProduct.get(line.productId)
         if (!item) return [line]
         if (item.reason === 'unavailable' || item.available < 1) return []
-        return [{ ...line, quantity: Math.min(line.quantity, item.available) }]
+        return [
+          { ...line, quantity: Math.min(line.quantity, item.available), stock: item.available },
+        ]
       }),
     )
   }

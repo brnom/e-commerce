@@ -4,7 +4,7 @@ import { Check, ShoppingCart } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { cartStore, type CartProduct } from '@/lib/cart-store'
+import { cartStore, useCart, type CartProduct } from '@/lib/cart-store'
 import { cn } from '@/lib/utils'
 
 import type { ComponentProps } from 'react'
@@ -22,7 +22,9 @@ const addedStyle =
 
 export function AddToCartButton({ product, quantity = 1, onAdded, className, ...rest }: Props) {
   const [added, setAdded] = useState(false)
+  const inCart = useCart().find((line) => line.productId === product.id)?.quantity ?? 0
   const outOfStock = product.stock < 1
+  const allInCart = !outOfStock && inCart >= product.stock
 
   useEffect(() => {
     if (!added) return
@@ -33,9 +35,15 @@ export function AddToCartButton({ product, quantity = 1, onAdded, className, ...
   return (
     <Button
       type="button"
-      disabled={outOfStock}
+      disabled={outOfStock || allInCart}
       data-added={added || undefined}
-      aria-label={outOfStock ? `Out of stock: ${product.name}` : `Add ${product.name} to cart`}
+      aria-label={
+        outOfStock
+          ? `Out of stock: ${product.name}`
+          : allInCart
+            ? `All stock in cart: ${product.name}`
+            : `Add ${product.name} to cart`
+      }
       className={cn(added && addedStyle, className)}
       onClick={() => {
         cartStore.add(product, quantity)
@@ -52,7 +60,7 @@ export function AddToCartButton({ product, quantity = 1, onAdded, className, ...
       ) : (
         <span key="idle" className="inline-flex items-center gap-2">
           <ShoppingCart />
-          {outOfStock ? 'Out of stock' : 'Add to cart'}
+          {outOfStock ? 'Out of stock' : allInCart ? 'All in cart' : 'Add to cart'}
         </span>
       )}
     </Button>

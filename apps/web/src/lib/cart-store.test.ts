@@ -33,6 +33,19 @@ describe('CartStore', () => {
     expect(cartCount(store.getSnapshot())).toBe(5)
   })
 
+  it('never lets a line exceed the stock known when the product was added', () => {
+    const store = new CartStore()
+    store.add({ ...shoes, stock: 5 }, 5)
+    store.add({ ...shoes, stock: 5 }, 5)
+    expect(store.getSnapshot()).toEqual([
+      expect.objectContaining({ productId: 'p-shoes', quantity: 5, stock: 5 }),
+    ])
+
+    store.add(shoes, 3)
+    store.setQuantity('p-shoes', 10)
+    expect(store.getSnapshot()[0]!.quantity).toBe(5)
+  })
+
   it('edits, removes and clears lines, notifying subscribers', () => {
     const store = new CartStore()
     const listener = vi.fn()
@@ -66,7 +79,7 @@ describe('CartStore', () => {
     ])
 
     expect(store.getSnapshot()).toEqual([
-      expect.objectContaining({ productId: 'p-shoes', quantity: 1 }),
+      expect.objectContaining({ productId: 'p-shoes', quantity: 1, stock: 1 }),
     ])
   })
 

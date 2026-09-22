@@ -26,6 +26,18 @@ describe('AddToCartButton', () => {
     ])
   })
 
+  it('stops at the stock and is disabled once all of it is in the cart', async () => {
+    renderWithQuery(<AddToCartButton product={shoes} quantity={5} />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add Running Shoes to cart' }))
+
+    const button = screen.getByRole('button', { name: 'All stock in cart: Running Shoes' })
+    expect(button).toBeDisabled()
+    expect(cartStore.getSnapshot()).toEqual([
+      expect.objectContaining({ productId: 'p-shoes', quantity: 5 }),
+    ])
+  })
+
   it('is disabled and labelled when the product is out of stock', () => {
     renderWithQuery(<AddToCartButton product={{ ...shoes, stock: 0 }} />)
 

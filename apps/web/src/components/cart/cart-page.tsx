@@ -1,6 +1,5 @@
 'use client'
 
-import { MAX_ITEM_QUANTITY } from '@ecommerce/shared'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
@@ -76,7 +75,7 @@ export function CartLinesTable({
                   <QuantityStepper
                     name={line.name}
                     value={line.quantity}
-                    max={MAX_ITEM_QUANTITY}
+                    max={line.stock}
                     onChange={(quantity) => cartStore.setQuantity(line.productId, quantity)}
                     className="ml-auto"
                   />
