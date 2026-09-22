@@ -4,6 +4,26 @@ A small e-commerce platform: a product catalog with search, bulk import from CSV
 
 This repository was built for a technical assessment. The functional brief asked for product CRUD, CSV import, search, purchase with a fake payment, a UI for all of it, Docker and a local DB. This repository treats that brief as the product requirements of a real system. [Decisions](#decisions) and the `openspec/` directory record the reasoning behind each decision.
 
+## Discussion and alternatives
+
+This system is small on purpose. It runs as one API process on one PostgreSQL database, and it has no users or accounts. Several designs that a larger store needs were considered and not built, because at this size they add moving parts without a real benefit. This section names them, so the gaps are decisions and not oversights.
+
+**Locks on stock.** The API reserves stock with one conditional `UPDATE … SET stock = stock - q WHERE stock >= q`. PostgreSQL locks the row for that statement, so two orders for the last unit cannot both succeed, and the API sorts the items by product id so that two orders never deadlock. We considered explicit locks: `SELECT … FOR UPDATE` in PostgreSQL, to hold the rows while a multi-step check runs, and a distributed lock in Redis, to serialize the buyers of one product across processes. At this size the conditional `UPDATE` gives the same guarantee in one statement. A larger system needs the locks: many API instances, a popular product that many buyers want at the same moment, or stock that lives outside one PostgreSQL database, for example in a separate inventory service or in Redis counters. In that system, a lock or a queue per product also keeps the contention off the database row, and a stock hold with an expiry can keep an item for the buyer during checkout.
+
+**No authentication, no authorization and no rate limiting.** Anyone who can reach the API can read and write the catalog, import a file and place an order. Run it locally. Do not expose it to a network.
+
+The code does defend these points:
+
+- **CORS allows exactly one origin**, `WEB_ORIGIN`.
+- **Every input is validated twice**, by zod in the browser and by Pydantic in the API. An error never returns a stack trace.
+- **Uploads are bounded.** The API parses a CSV in memory and never writes it to disk.
+- **User-supplied text is rendered as text**, so React escapes any markup in a product name.
+- **SQLAlchemy parameterizes every query.**
+- **No card data is stored.** The order keeps only the last four digits.
+- **Both containers run as unprivileged users.**
+
+**Out of scope:** accounts and roles (an auth layer and an owner on every write), rate limiting (tighter on `/imports` and `/orders`), observability (structured logs, traces, metrics), a real payment provider (webhooks, idempotency keys, a sweeper for `pending` orders), and refunds, shipping and tax, which the domain does not model.
+
 ## Demo
 
 Both recordings show the web app on `localhost:3005` and the API on `localhost:5001`.
@@ -197,24 +217,6 @@ The payment provider is simulated. `4000 0000 0000 0002` is declined, `4000 0000
 - `201` with the order in status `paid` or `payment_failed`.
 - `400` with per-field issues.
 - `409` with every item that is short of stock or unavailable.
-
-## Security and scope
-
-This is a demonstration system, and it is open on purpose: **there is no authentication, no authorization and no rate limiting**. Anyone who can reach the API can read and write the catalog, import a file and place an order. Run it locally. Do not expose it to a network.
-
-The code does defend these points:
-
-- **CORS allows exactly one origin**, `WEB_ORIGIN`.
-- **Every input is validated twice**, by zod in the browser and by Pydantic in the API. An error never returns a stack trace.
-- **Uploads are bounded.** The API parses a CSV in memory and never writes it to disk.
-- **User-supplied text is rendered as text**, so React escapes any markup in a product name.
-- **SQLAlchemy parameterizes every query.**
-- **No card data is stored.** The order keeps only the last four digits.
-- **Both containers run as unprivileged users.**
-
-Out of scope: accounts and roles (an auth layer and an owner on every write), rate limiting (tighter on `/imports` and `/orders`), observability (structured logs, traces, metrics), a real payment provider (webhooks, idempotency keys, a sweeper for `pending` orders), and refunds, shipping and tax, which the domain does not model.
-
-Dependabot and CodeQL watch the dependencies and the code.
 
 ## Status
 
