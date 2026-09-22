@@ -70,43 +70,7 @@ Three lint rules shape the code:
 
 - **No comments in source files.** Intent belongs in names, types, tests and this document. ESLint enforces the rule in TypeScript, and `apps/api/scripts/check_sources.py` enforces it in Python.
 - **Layer boundaries in the API.** `domain/` imports no framework and no other layer. `application/` does not import `infra/`, FastAPI or SQLAlchemy. Import-linter enforces these boundaries.
-- **No `dangerouslySetInnerHTML` in the web app.** The web app always renders product data as text.
-
-## Environment variables
-
-Defaults work for local development and for Compose.
-
-| Variable              | Used by      | Purpose                                              |
-| --------------------- | ------------ | ---------------------------------------------------- |
-| `DATABASE_URL`        | api          | PostgreSQL connection string. Required.              |
-| `TEST_DATABASE_URL`   | api (tests)  | Database the integration tests recreate and migrate. |
-| `API_PORT`            | api, compose | HTTP port the API listens on.                        |
-| `WEB_PORT`            | web, compose | HTTP port the web app listens on.                    |
-| `WEB_ORIGIN`          | api          | Origin allowed by CORS.                              |
-| `NEXT_PUBLIC_API_URL` | web          | API base URL as seen from the browser. Build-time.   |
-| `POSTGRES_USER`       | compose (db) | Database user.                                       |
-| `POSTGRES_PASSWORD`   | compose (db) | Database password.                                   |
-| `POSTGRES_DB`         | compose (db) | Database name.                                       |
-
-The defaults, as committed in `.env.example`:
-
-```bash
-POSTGRES_USER=app
-POSTGRES_PASSWORD=app
-POSTGRES_DB=ecommerce
-
-DATABASE_URL=postgresql://app:app@localhost:5432/ecommerce
-TEST_DATABASE_URL=postgresql://app:app@localhost:5432/ecommerce_test
-API_PORT=5001
-WEB_PORT=3005
-WEB_ORIGIN=http://localhost:3005
-
-NEXT_PUBLIC_API_URL=http://localhost:5001
-```
-
-The API validates its environment at startup and exits if a variable is missing or malformed.
-
-`pnpm dev` and Compose read both ports from `.env`. When you change a port, also change the URL that names it: `WEB_ORIGIN` for the web port, `NEXT_PUBLIC_API_URL` for the API port.
+- **Strict, text-only web app.** TypeScript runs in `strict` mode with `noUncheckedIndexedAccess`, and ESLint rejects `dangerouslySetInnerHTML`, so product data always renders as escaped text.
 
 ## Repository layout
 
@@ -226,13 +190,7 @@ The sample file imports as **87 created, 2 skipped, 8 failed**. A second import 
 
 Add products to the cart, review it at `/cart`, and pay at `/checkout`. The checkout opens with a sample customer and the approving test card, so one click places a paid order. Orders appear at `/orders`.
 
-The payment provider is simulated. These are its test cards:
-
-| Card number           | Outcome                                                  |
-| --------------------- | -------------------------------------------------------- |
-| `4242 4242 4242 4242` | Approved (as is any other number passing the Luhn check) |
-| `4000 0000 0000 0002` | Declined: "Your card was declined"                       |
-| `4000 0000 0000 9995` | Declined: "Your card has insufficient funds"             |
+The payment provider is simulated. `4000 0000 0000 0002` is declined, `4000 0000 0000 9995` is declined for insufficient funds, and any other number that passes the Luhn check, such as `4242 4242 4242 4242`, is approved.
 
 `POST /orders` takes `{ items: [{ productId, quantity }], customer: { name, email }, card: { cardholderName, cardNumber, expiry, cvc } }`. It answers:
 
@@ -254,15 +212,7 @@ The code does defend these points:
 - **No card data is stored.** The order keeps only the last four digits.
 - **Both containers run as unprivileged users.**
 
-Out of scope, with what each item would need:
-
-| Not here                              | What it would need                                                                          |
-| ------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Accounts, sessions, roles             | An auth layer in front of the API and an owner on every write. The cart is anonymous today. |
-| Rate limiting and quotas              | A throttler on the API, tighter on `/imports` and `/orders`                                 |
-| Observability                         | Structured logs with a request id, traces, metrics behind the health check                  |
-| A real payment provider               | Webhooks, idempotency keys, and a sweeper for orders left `pending`                         |
-| Refunds, cancellations, shipping, tax | Order state transitions the domain does not model                                           |
+Out of scope: accounts and roles (an auth layer and an owner on every write), rate limiting (tighter on `/imports` and `/orders`), observability (structured logs, traces, metrics), a real payment provider (webhooks, idempotency keys, a sweeper for `pending` orders), and refunds, shipping and tax, which the domain does not model.
 
 Dependabot and CodeQL watch the dependencies and the code.
 
