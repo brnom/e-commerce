@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 
 import { OrderIdPipe } from './order-id.pipe'
 import { OrdersController } from './orders.controller'
+import { ZodValidationPipe } from '../zod-validation.pipe'
 import { GetOrder } from '@/application/orders/get-order'
 import { ListOrders } from '@/application/orders/list-orders'
 import { PlaceOrder } from '@/application/orders/place-order'
@@ -17,6 +18,7 @@ import type { PaymentGateway } from '@/application/ports/payment-gateway'
   controllers: [OrdersController],
   providers: [
     OrderIdPipe,
+    ZodValidationPipe,
     { provide: ORDER_REPOSITORY, useClass: PrismaOrderRepository },
     { provide: PAYMENT_GATEWAY, useClass: FakePaymentGateway },
     {

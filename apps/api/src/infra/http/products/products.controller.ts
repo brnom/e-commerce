@@ -30,14 +30,15 @@ export class ProductsController {
 
   @Post()
   create(
-    @Body(new ZodValidationPipe(createProductSchema)) body: CreateProductInput,
+    @Body({ schema: createProductSchema, pipes: [ZodValidationPipe] }) body: CreateProductInput,
   ): Promise<Product> {
     return this.createProduct.execute(body)
   }
 
   @Get()
   list(
-    @Query(new ZodValidationPipe(listProductsQuerySchema)) query: ListProductsQuery,
+    @Query({ schema: listProductsQuerySchema, pipes: [ZodValidationPipe] })
+    query: ListProductsQuery,
   ): Promise<ProductPage> {
     return this.listProducts.execute(query)
   }
@@ -50,7 +51,7 @@ export class ProductsController {
   @Patch(':id')
   update(
     @Param('id', ProductIdPipe) id: string,
-    @Body(new ZodValidationPipe(updateProductSchema)) body: UpdateProductInput,
+    @Body({ schema: updateProductSchema, pipes: [ZodValidationPipe] }) body: UpdateProductInput,
   ): Promise<Product> {
     return this.updateProduct.execute(id, body)
   }

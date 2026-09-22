@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common'
 import { ProductIdPipe } from './product-id.pipe'
 import { ProductsController } from './products.controller'
 import { CategoriesController } from '../categories/categories.controller'
+import { ZodValidationPipe } from '../zod-validation.pipe'
 import { CATEGORY_REPOSITORY } from '@/application/ports/category-repository'
 import { PRODUCT_REPOSITORY } from '@/application/ports/product-repository'
 import { CreateProduct } from '@/application/products/create-product'
@@ -21,6 +22,7 @@ import type { ProductRepository } from '@/application/ports/product-repository'
   controllers: [ProductsController, CategoriesController],
   providers: [
     ProductIdPipe,
+    ZodValidationPipe,
     { provide: PRODUCT_REPOSITORY, useClass: PrismaProductRepository },
     { provide: CATEGORY_REPOSITORY, useClass: PrismaCategoryRepository },
     {
