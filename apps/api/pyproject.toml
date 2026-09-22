@@ -1,0 +1,97 @@
+[project]
+name = "ecommerce-api"
+version = "0.0.0"
+requires-python = ">=3.14"
+dependencies = [
+    "alembic>=1.20.0",
+    "fastapi>=0.141.1",
+    "psycopg[binary]>=3.3.6",
+    "pydantic>=2.13.5",
+    "python-multipart>=0.0.32",
+    "sqlalchemy[asyncio]>=2.0.54",
+    "uvicorn>=0.53.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.12,<0.13"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "import-linter>=2.15",
+    "mypy>=2.3.1",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.16.8",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF", "ASYNC", "PT", "N", "C4", "PIE", "RET", "ARG", "PL", "TID"]
+ignore = ["PLR0913", "PLR2004", "PLR0911"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["PLR0917"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.isort]
+known-first-party = ["ecommerce_api"]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.mypy]
+strict = true
+python_version = "3.14"
+mypy_path = "src"
+files = ["src", "tests", "migrations", "scripts"]
+explicit_package_bases = true
+plugins = ["pydantic.mypy"]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+markers = [
+    "integration: needs the PostgreSQL test database",
+]
+addopts = "--strict-markers"
+
+[tool.importlinter]
+root_package = "ecommerce_api"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Hexagonal layers"
+type = "layers"
+layers = [
+    "ecommerce_api.infra",
+    "ecommerce_api.application",
+    "ecommerce_api.domain",
+]
+
+[[tool.importlinter.contracts]]
+name = "Application stays framework-free"
+type = "forbidden"
+source_modules = ["ecommerce_api.application"]
+forbidden_modules = ["fastapi", "starlette", "sqlalchemy", "psycopg", "alembic", "uvicorn", "python_multipart"]
+
+[[tool.importlinter.contracts]]
+name = "Domain stays plain Python"
+type = "forbidden"
+source_modules = ["ecommerce_api.domain"]
+forbidden_modules = ["fastapi", "starlette", "sqlalchemy", "psycopg", "alembic", "uvicorn", "python_multipart", "pydantic", "pydantic_core"]
