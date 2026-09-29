@@ -9,7 +9,7 @@ dependencies = [
     "pydantic>=2.13.5",
     "python-multipart>=0.0.32",
     "sqlalchemy[asyncio]>=2.0.54",
-    "uvicorn>=0.53.0",
+    "uvicorn>=0.54.0",
 ]
 
 [build-system]
